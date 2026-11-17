@@ -20,6 +20,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -84,16 +85,22 @@ fun DashboardScreen(
             }
         }
         item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text("Recent", style = MaterialTheme.typography.titleMedium)
                 TextButton(onClick = onOpenInvoices) { Text("See all") }
             }
         }
         if (invoices.invoices.isEmpty()) {
-            item { Text("No invoices yet", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            item { GettingStartedCard() }
         } else {
             items(invoices.invoices.take(3), key = { it.id }) { InvoiceRow(it) }
         }
+        item { Text("Good to know", style = MaterialTheme.typography.titleMedium) }
+        items(TIPS) { TipCard(it.first, it.second) }
     }
 }
 
@@ -103,6 +110,38 @@ private fun StatCard(label: String, amount: Money, modifier: Modifier = Modifier
         Column(Modifier.padding(12.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(amount.format(), style = MaterialTheme.typography.titleSmall, maxLines = 1)
+        }
+    }
+}
+
+private val TIPS = listOf(
+    "BTW rates" to "Standard 21%, reduced 9%, and 0% for exempt or reverse-charge sales. Pick one per line.",
+    "Gap-free numbers" to "Invoice numbers run in sequence (2026-0001, 2026-0002…) with no gaps. Sent invoices are locked.",
+    "Payment term" to "14 days is the common default. Add your IBAN so clients can pay straight away.",
+    "Must be on every invoice" to "Your name, KvK and BTW number, the client, date, number, description, amount and BTW.",
+)
+
+@Composable
+private fun GettingStartedCard() {
+    Card(
+        Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Get started in 3 steps", style = MaterialTheme.typography.titleMedium)
+            Text("1. Fill in the quick invoice above")
+            Text("2. Check the BTW and total")
+            Text("3. Tap Create invoice, and it shows up here")
+        }
+    }
+}
+
+@Composable
+private fun TipCard(title: String, body: String) {
+    OutlinedCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp)) {
+            Text(title, style = MaterialTheme.typography.titleSmall)
+            Text(body, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
