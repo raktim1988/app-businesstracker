@@ -30,12 +30,16 @@ fun InvoiceListScreen(viewModel: InvoicesViewModel, onNewInvoice: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     Box(Modifier.fillMaxSize()) {
         if (state.invoices.isEmpty()) {
-            Text("No invoices yet", Modifier.align(Alignment.Center))
+            Column(Modifier.padding(16.dp)) {
+                Text("Invoices", style = MaterialTheme.typography.headlineMedium)
+                Text("No invoices yet", Modifier.padding(top = 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         } else {
             LazyColumn(
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 88.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                item { Text("Invoices", style = MaterialTheme.typography.headlineMedium) }
                 items(state.invoices, key = { it.id }) { InvoiceRow(it) }
             }
         }
@@ -49,7 +53,7 @@ fun InvoiceListScreen(viewModel: InvoicesViewModel, onNewInvoice: () -> Unit) {
 }
 
 @Composable
-private fun InvoiceRow(invoice: Invoice) {
+fun InvoiceRow(invoice: Invoice) {
     Card(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(Modifier.weight(1f)) {

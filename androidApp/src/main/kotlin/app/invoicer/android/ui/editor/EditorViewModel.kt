@@ -12,6 +12,8 @@ import app.invoicer.domain.model.InvoiceLine
 import app.invoicer.domain.model.InvoiceTotals
 import app.invoicer.domain.model.Money
 import app.invoicer.domain.model.VatRate
+import app.invoicer.domain.validation.FieldValidation
+import app.invoicer.domain.validation.parseScaled
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,41 +29,55 @@ import kotlin.uuid.Uuid
 
 data class LineInput(
     val description: String = "",
-    val quantity: String = "1",
+    val quantity: String = "",
     val unitPrice: String = "",
     val vatRate: VatRate = VatRate.HIGH,
-)
+) {
+    val descriptionError get() = FieldValidation.description(description)
+    val quantityError get() = FieldValidation.quantity(quantity)
+    val rateError get() = FieldValidation.rate(unitPrice)
+    val isValid get() = descriptionError == null && quantityError == null && rateError == null
+}
 
 data class EditorState(
     val clientName: String = "",
     val lines: List<LineInput> = listOf(LineInput()),
     val totals: InvoiceTotals = InvoiceCalculator.totals(emptyList()),
-    val error: String? = null,
+    val showErrors: Boolean = false,
     val saved: Boolean = false,
-)
+) {
+    val clientError get() = FieldValidation.client(clientName)
+    val isValid get() = clientError == null && lines.isNotEmpty() && lines.all { it.isValid }
+}
 
 class EditorViewModel(private val container: AppContainer) : ViewModel() {
     private val _state = MutableStateFlow(EditorState())
     val state: StateFlow<EditorState> = _state.asStateFlow()
 
-    fun onClientName(value: String) = _state.update { it.copy(clientName = value, error = null) }
+    fun onClientName(value: String) = _state.update { it.copy(clientName = value.take(80)) }
 
     fun onLine(index: Int, line: LineInput) = _state.update { s ->
         val lines = s.lines.toMutableList().also { it[index] = line }
-        s.copy(lines = lines, totals = InvoiceCalculator.totals(lines.mapNotNull(::toDomain)), error = null)
+        s.copy(lines = lines, totals = totalsOf(lines))
     }
 
-    fun addLine() = _state.update { it.copy(lines = it.lines + LineInput()) }
+    fun addLine() = _state.update { it.copy(lines = it.lines + LineInput(quantity = "1")) }
 
     fun removeLine(index: Int) = _state.update { s ->
         val lines = s.lines.toMutableList().also { if (it.size > 1) it.removeAt(index) }
-        s.copy(lines = lines, totals = InvoiceCalculator.totals(lines.mapNotNull(::toDomain)))
+        s.copy(lines = lines, totals = totalsOf(lines))
     }
+
+    fun reset() = _state.update { EditorState() }
 
     @OptIn(ExperimentalUuidApi::class)
     fun save() {
+        val s = _state.value
+        if (!s.isValid) {
+            _state.update { it.copy(showErrors = true) }
+            return
+        }
         viewModelScope.launch {
-            val s = _state.value
             val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
             val invoice = Invoice(
                 id = Uuid.random().toString(),
@@ -73,11 +89,14 @@ class EditorViewModel(private val container: AppContainer) : ViewModel() {
                 lines = s.lines.mapNotNull(::toDomain),
             )
             val error = container.saveInvoice(invoice)
-            _state.update { it.copy(error = error, saved = error == null) }
+            _state.update { it.copy(showErrors = error != null, saved = error == null) }
         }
     }
 
+    private fun totalsOf(lines: List<LineInput>) = InvoiceCalculator.totals(lines.mapNotNull(::toDomain))
+
     private fun toDomain(input: LineInput): InvoiceLine? {
+        if (input.quantityError != null || input.rateError != null) return null
         val qty = parseScaled(input.quantity, 3) ?: return null
         val price = parseScaled(input.unitPrice, 2) ?: return null
         return InvoiceLine(input.description.trim(), qty, Money(price), input.vatRate)
@@ -87,13 +106,4 @@ class EditorViewModel(private val container: AppContainer) : ViewModel() {
         fun factory(container: AppContainer): ViewModelProvider.Factory =
             viewModelFactory { initializer { EditorViewModel(container) } }
     }
-}
-
-/** Parses "1,5" or "1.5" into an integer scaled by 10^[decimals]; null if invalid. */
-internal fun parseScaled(text: String, decimals: Int): Long? {
-    val clean = text.trim().replace(',', '.')
-    if (!Regex("""\d+(\.\d*)?""").matches(clean)) return null
-    val (whole, frac) = clean.split('.', limit = 2).let { it[0] to it.getOrElse(1) { "" } }
-    val fraction = frac.take(decimals).padEnd(decimals, '0')
-    return (whole + fraction).toLongOrNull()
 }

@@ -69,7 +69,13 @@ fun InvoicerRoot(container: AppContainer) {
         val invoicesVm: InvoicesViewModel = viewModel(factory = InvoicesViewModel.factory(container))
         NavHost(navController, startDestination = Tab.Home.route, modifier = Modifier.padding(padding)) {
             composable(Tab.Home.route) {
-                DashboardScreen(invoicesVm) { navController.navigate(EDITOR) }
+                val homeEditorVm: EditorViewModel = viewModel(factory = EditorViewModel.factory(container))
+                DashboardScreen(
+                    invoicesViewModel = invoicesVm,
+                    editorViewModel = homeEditorVm,
+                    onOpenInvoices = { navController.navigate(Tab.Invoices.route) },
+                    onOpenEditor = { navController.navigate(EDITOR) },
+                )
             }
             composable(Tab.Invoices.route) {
                 InvoiceListScreen(invoicesVm) { navController.navigate(EDITOR) }
