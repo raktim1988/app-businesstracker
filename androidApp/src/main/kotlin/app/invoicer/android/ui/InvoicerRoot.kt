@@ -1,5 +1,6 @@
 package app.invoicer.android.ui
 
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -68,7 +69,7 @@ fun InvoicerRoot(container: AppContainer) {
         },
     ) { padding ->
         val invoicesVm: InvoicesViewModel = viewModel(factory = InvoicesViewModel.factory(container))
-        NavHost(navController, startDestination = Tab.Home.route, modifier = Modifier.padding(padding)) {
+        NavHost(navController, startDestination = Tab.Home.route, modifier = Modifier.padding(padding).consumeWindowInsets(padding)) {
             composable(Tab.Home.route) {
                 val homeEditorVm: EditorViewModel = viewModel(factory = EditorViewModel.factory(container))
                 DashboardScreen(
