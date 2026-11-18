@@ -61,7 +61,7 @@ class EditorViewModel(private val container: AppContainer) : ViewModel() {
         s.copy(lines = lines, totals = totalsOf(lines))
     }
 
-    fun addLine() = _state.update { it.copy(lines = it.lines + LineInput(quantity = "1")) }
+    fun addLine() = _state.update { it.copy(lines = it.lines + LineInput(quantity = "1"), showErrors = false) }
 
     fun removeLine(index: Int) = _state.update { s ->
         val lines = s.lines.toMutableList().also { if (it.size > 1) it.removeAt(index) }

@@ -13,6 +13,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -47,7 +50,7 @@ fun InvoiceListScreen(viewModel: InvoicesViewModel, onNewInvoice: () -> Unit) {
             onClick = onNewInvoice,
             icon = { Icon(Icons.Filled.Add, contentDescription = null) },
             text = { Text("New invoice") },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp).semantics { contentDescription = "New invoice" },
         )
     }
 }
@@ -55,9 +58,9 @@ fun InvoiceListScreen(viewModel: InvoicesViewModel, onNewInvoice: () -> Unit) {
 @Composable
 fun InvoiceRow(invoice: Invoice) {
     Card(Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(1f)) {
-                Text(invoice.clientName, style = MaterialTheme.typography.titleMedium)
+                Text(invoice.clientName, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text("${invoice.number} · ${invoice.status}", style = MaterialTheme.typography.bodySmall)
             }
             Text(InvoiceCalculator.totals(invoice.lines).gross.format(), style = MaterialTheme.typography.titleMedium)
