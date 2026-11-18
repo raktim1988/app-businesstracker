@@ -43,7 +43,7 @@ Tools: `scripts/qa/install-and-launch.sh` (build+install+launch) and `scripts/qa
 Build a table of every interactive element per screen (use `qa.py dump` to list clickable nodes) and exercise each one. For each: action, expected destination/effect, actual, PASS/FAIL.
 
 **Buttons (must verify destination and data)**
-- Home "More lines…": opens the editor with the quick-form values (client, description, qty, rate, BTW) carried over, not blank.
+- Home "Add more lines": opens the editor with the quick-form values (client, description, qty, rate, BTW) carried over, not blank.
 - Home "Create invoice": valid input creates the invoice, shows it under Recent, resets the form; invalid input stays on Home with errors.
 - Home "See all": opens the Invoices tab with the tab selected. Invoices "New"/FAB opens the editor; Cancel returns without creating anything.
 - Editor "Add line", remove line, BTW chips, "Save draft": each changes only what it says; totals update live.

@@ -76,7 +76,7 @@ fun DashboardScreen(
                     LineFields(0, editor.lines[0], editor.showErrors, editorViewModel)
                     TotalsBlock(editor.totals, Modifier.padding(vertical = 8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TextButton(onClick = onOpenEditor) { Text("More lines…") }
+                        TextButton(onClick = onOpenEditor) { Text("Add more lines") }
                         Button(onClick = editorViewModel::save, modifier = Modifier.weight(1f)) {
                             Text("Create invoice")
                         }
