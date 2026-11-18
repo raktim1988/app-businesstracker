@@ -16,6 +16,7 @@ enum class FieldError {
     DescriptionRequired, DescriptionTooLong,
     QuantityRequired, QuantityFormat, QuantityNotPositive, QuantityTooLarge,
     RateRequired, RateFormat, RateNotPositive, RateTooLarge,
+    EmailInvalid, KvkInvalid, BtwInvalid, PaymentTermInvalid,
 }
 
 /** Field rules shared by all platforms. Each returns an error code or null when valid. */
@@ -58,5 +59,25 @@ object FieldValidation {
             scaled > MAX_RATE_CENTS -> FieldError.RateTooLarge
             else -> null
         }
+    }
+
+    private val emailRegex = Regex("""[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}""")
+    private val btwRegex = Regex("""NL\d{9}B\d{2}""")
+
+    /** Optional: blank is fine. */
+    fun email(value: String): FieldError? =
+        if (value.isBlank() || emailRegex.matches(value.trim())) null else FieldError.EmailInvalid
+
+    /** Optional: blank is fine; a Dutch KvK number has 8 digits. */
+    fun kvk(value: String): FieldError? =
+        if (value.isBlank() || Regex("""\d{8}""").matches(value.trim())) null else FieldError.KvkInvalid
+
+    /** Optional: blank is fine; format NL123456789B01. */
+    fun btw(value: String): FieldError? =
+        if (value.isBlank() || btwRegex.matches(value.trim().uppercase())) null else FieldError.BtwInvalid
+
+    fun paymentTermDays(value: String): FieldError? {
+        val days = value.trim().toIntOrNull()
+        return if (days != null && days in 1..120) null else FieldError.PaymentTermInvalid
     }
 }

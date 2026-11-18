@@ -7,6 +7,9 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.invoicer.data.AppContainer
 import app.invoicer.domain.calc.InvoiceCalculator
+import app.invoicer.domain.model.Client
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import app.invoicer.domain.model.Invoice
 import app.invoicer.domain.model.InvoiceLine
 import app.invoicer.domain.model.InvoiceTotals
@@ -41,6 +44,8 @@ data class LineInput(
 
 data class EditorState(
     val clientName: String = "",
+    val clientId: String = "",
+    val paymentTermDays: Int = 30,
     val lines: List<LineInput> = listOf(LineInput()),
     val totals: InvoiceTotals = InvoiceCalculator.totals(emptyList()),
     val showErrors: Boolean = false,
@@ -54,7 +59,14 @@ class EditorViewModel(private val container: AppContainer) : ViewModel() {
     private val _state = MutableStateFlow(EditorState())
     val state: StateFlow<EditorState> = _state.asStateFlow()
 
-    fun onClientName(value: String) = _state.update { it.copy(clientName = value.take(80)) }
+    val clients: StateFlow<List<Client>> = container.clientRepository.observeAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun onClientName(value: String) =
+        _state.update { it.copy(clientName = value.take(80), clientId = "", paymentTermDays = 30) }
+
+    fun pickClient(client: Client) =
+        _state.update { it.copy(clientName = client.name, clientId = client.id, paymentTermDays = client.paymentTermDays) }
 
     fun onLine(index: Int, line: LineInput) = _state.update { s ->
         val lines = s.lines.toMutableList().also { it[index] = line }
@@ -82,10 +94,10 @@ class EditorViewModel(private val container: AppContainer) : ViewModel() {
             val invoice = Invoice(
                 id = Uuid.random().toString(),
                 number = container.invoiceRepository.nextNumber(today.year),
-                clientId = "",
+                clientId = s.clientId,
                 clientName = s.clientName.trim(),
                 issueDate = today,
-                dueDate = today.plus(DatePeriod(days = 30)),
+                dueDate = today.plus(DatePeriod(days = s.paymentTermDays)),
                 lines = s.lines.mapNotNull(::toDomain),
             )
             val error = container.saveInvoice(invoice)

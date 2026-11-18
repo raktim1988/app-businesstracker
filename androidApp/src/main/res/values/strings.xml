@@ -49,7 +49,21 @@
     <string name="cancel">Cancel</string>
     <string name="save_draft">Save draft</string>
 
-    <string name="clients_coming">Clients — coming in v0.2</string>
+    <string name="clients_title">Clients</string>
+    <string name="no_clients">No clients yet</string>
+    <string name="new_client_fab">New client</string>
+    <string name="client_form_title">New client</string>
+    <string name="field_email">Email (optional)</string>
+    <string name="field_kvk">KvK (optional)</string>
+    <string name="field_btw">BTW number (optional)</string>
+    <string name="field_payment_term">Payment term (days)</string>
+    <string name="save_client">Save client</string>
+    <string name="payment_term_days">%1$d days</string>
+    <string name="existing_clients">Existing clients</string>
+    <string name="err_email">Enter a valid email address</string>
+    <string name="err_kvk">KvK has 8 digits</string>
+    <string name="err_btw">Format: NL123456789B01</string>
+    <string name="err_term">Enter 1 to 120 days</string>
     <string name="settings_title">Settings</string>
     <string name="language">Language</string>
     <string name="language_system">System default</string>

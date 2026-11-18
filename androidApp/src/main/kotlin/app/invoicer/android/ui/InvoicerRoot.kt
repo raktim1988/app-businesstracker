@@ -28,6 +28,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.invoicer.android.ui.dashboard.DashboardScreen
+import app.invoicer.android.ui.clients.ClientFormScreen
+import app.invoicer.android.ui.clients.ClientsScreen
+import app.invoicer.android.ui.clients.ClientsViewModel
 import app.invoicer.android.ui.editor.EditorScreen
 import app.invoicer.android.ui.editor.EditorViewModel
 import app.invoicer.android.ui.invoices.InvoiceListScreen
@@ -36,6 +39,7 @@ import app.invoicer.android.ui.placeholder.PlaceholderScreen
 import app.invoicer.data.AppContainer
 
 private const val EDITOR = "editor"
+private const val CLIENT_FORM = "client_form"
 
 private enum class Tab(val route: String, @StringRes val label: Int, val icon: ImageVector) {
     Home("home", R.string.tab_home, Icons.Filled.Home),
@@ -52,7 +56,7 @@ fun InvoicerRoot(container: AppContainer) {
 
     Scaffold(
         bottomBar = {
-            if (currentRoute != EDITOR) {
+            if (currentRoute != EDITOR && currentRoute != CLIENT_FORM) {
                 NavigationBar {
                     Tab.entries.forEach { tab ->
                         NavigationBarItem(
@@ -73,6 +77,7 @@ fun InvoicerRoot(container: AppContainer) {
         },
     ) { padding ->
         val invoicesVm: InvoicesViewModel = viewModel(factory = InvoicesViewModel.factory(container))
+        val clientsVm: ClientsViewModel = viewModel(factory = ClientsViewModel.factory(container))
         NavHost(navController, startDestination = Tab.Home.route, modifier = Modifier.padding(padding).consumeWindowInsets(padding)) {
             composable(Tab.Home.route) {
                 val homeEditorVm: EditorViewModel = viewModel(factory = EditorViewModel.factory(container))
@@ -86,7 +91,15 @@ fun InvoicerRoot(container: AppContainer) {
             composable(Tab.Invoices.route) {
                 InvoiceListScreen(invoicesVm) { navController.navigate(EDITOR) }
             }
-            composable(Tab.Clients.route) { PlaceholderScreen(stringResource(R.string.clients_coming)) }
+            composable(Tab.Clients.route) {
+                ClientsScreen(clientsVm) { navController.navigate(CLIENT_FORM) }
+            }
+            composable(CLIENT_FORM) {
+                ClientFormScreen(
+                    onSave = { clientsVm.add(it); navController.popBackStack() },
+                    onClose = { navController.popBackStack() },
+                )
+            }
             composable(Tab.Settings.route) { SettingsScreen() }
             composable(EDITOR) {
                 // Shares the Home draft so "More lines…" keeps what was typed

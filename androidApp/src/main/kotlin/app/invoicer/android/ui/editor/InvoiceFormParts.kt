@@ -9,6 +9,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +36,7 @@ fun ValidatedField(
     modifier: Modifier = Modifier,
     numeric: Boolean = false,
     prefix: String? = null,
+    keyboardType: KeyboardType? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -41,20 +46,39 @@ fun ValidatedField(
         isError = error != null,
         supportingText = error?.let { { Text(stringResource(it.messageRes())) } },
         singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = if (numeric) KeyboardType.Decimal else KeyboardType.Text),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType ?: if (numeric) KeyboardType.Decimal else KeyboardType.Text),
         modifier = modifier,
     )
 }
 
 @Composable
 fun ClientField(state: EditorState, viewModel: EditorViewModel, modifier: Modifier = Modifier) {
-    ValidatedField(
-        value = state.clientName,
-        onValueChange = { viewModel.onClientName(it.filter(FieldValidation::isClientChar)) },
-        label = stringResource(R.string.field_client),
-        error = state.clientError.takeIf { state.showErrors },
-        modifier = modifier.fillMaxWidth(),
-    )
+    val clients by viewModel.clients.collectAsStateWithLifecycle()
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        ValidatedField(
+            value = state.clientName,
+            onValueChange = { viewModel.onClientName(it.filter(FieldValidation::isClientChar)) },
+            label = stringResource(R.string.field_client),
+            error = state.clientError.takeIf { state.showErrors },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        if (clients.isNotEmpty()) {
+            Text(
+                stringResource(R.string.existing_clients),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(clients.take(8), key = { it.id }) { client ->
+                    FilterChip(
+                        selected = state.clientId == client.id,
+                        onClick = { viewModel.pickClient(client) },
+                        label = { Text(client.name, maxLines = 1) },
+                    )
+                }
+            }
+        }
+    }
 }
 
 /** Errors for numeric fields show as soon as something invalid is typed; required-errors wait for a save attempt. */

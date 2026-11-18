@@ -38,4 +38,18 @@ class FieldValidationTest {
         assertNull(FieldValidation.client("Bakker & Zn."))
         assertNull(FieldValidation.client("O'Neil-Jansen 2"))
     }
+
+    @Test
+    fun `optional client details`() {
+        assertNull(FieldValidation.email(""))
+        assertNull(FieldValidation.email("billing@acme.nl"))
+        assertEquals(FieldError.EmailInvalid, FieldValidation.email("billing@acme"))
+        assertNull(FieldValidation.kvk("12345678"))
+        assertEquals(FieldError.KvkInvalid, FieldValidation.kvk("1234"))
+        assertNull(FieldValidation.btw("nl123456789b01"))
+        assertEquals(FieldError.BtwInvalid, FieldValidation.btw("NL12345"))
+        assertNull(FieldValidation.paymentTermDays("14"))
+        assertEquals(FieldError.PaymentTermInvalid, FieldValidation.paymentTermDays("0"))
+        assertEquals(FieldError.PaymentTermInvalid, FieldValidation.paymentTermDays("abc"))
+    }
 }

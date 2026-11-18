@@ -49,7 +49,21 @@
     <string name="cancel">Annuleren</string>
     <string name="save_draft">Concept opslaan</string>
 
-    <string name="clients_coming">Klanten — komt in v0.2</string>
+    <string name="clients_title">Klanten</string>
+    <string name="no_clients">Nog geen klanten</string>
+    <string name="new_client_fab">Nieuwe klant</string>
+    <string name="client_form_title">Nieuwe klant</string>
+    <string name="field_email">E-mail (optioneel)</string>
+    <string name="field_kvk">KvK (optioneel)</string>
+    <string name="field_btw">Btw-nummer (optioneel)</string>
+    <string name="field_payment_term">Betaaltermijn (dagen)</string>
+    <string name="save_client">Klant opslaan</string>
+    <string name="payment_term_days">%1$d dagen</string>
+    <string name="existing_clients">Bestaande klanten</string>
+    <string name="err_email">Vul een geldig e-mailadres in</string>
+    <string name="err_kvk">KvK heeft 8 cijfers</string>
+    <string name="err_btw">Formaat: NL123456789B01</string>
+    <string name="err_term">Vul 1 tot 120 dagen in</string>
     <string name="settings_title">Instellingen</string>
     <string name="language">Taal</string>
     <string name="language_system">Systeemstandaard</string>

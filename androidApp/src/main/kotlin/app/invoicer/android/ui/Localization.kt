@@ -22,6 +22,10 @@ fun FieldError.messageRes(): Int = when (this) {
     FieldError.QuantityTooLarge, FieldError.RateTooLarge -> R.string.err_too_large
     FieldError.RateRequired -> R.string.err_rate_required
     FieldError.RateFormat -> R.string.err_rate_format
+    FieldError.EmailInvalid -> R.string.err_email
+    FieldError.KvkInvalid -> R.string.err_kvk
+    FieldError.BtwInvalid -> R.string.err_btw
+    FieldError.PaymentTermInvalid -> R.string.err_term
 }
 
 @StringRes
