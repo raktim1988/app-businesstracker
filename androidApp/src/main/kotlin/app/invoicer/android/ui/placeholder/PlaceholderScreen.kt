@@ -8,8 +8,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun PlaceholderScreen(title: String) {
+fun PlaceholderScreen(text: String) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("$title — coming in v0.2")
+        Text(text)
     }
 }

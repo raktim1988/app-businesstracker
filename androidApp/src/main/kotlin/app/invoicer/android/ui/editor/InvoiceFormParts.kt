@@ -1,5 +1,10 @@
 package app.invoicer.android.ui.editor
 
+import app.invoicer.domain.validation.FieldValidation
+import app.invoicer.domain.validation.FieldError
+import app.invoicer.android.ui.messageRes
+import androidx.compose.ui.res.stringResource
+import app.invoicer.android.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,7 +28,7 @@ fun ValidatedField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
-    error: String?,
+    error: FieldError?,
     modifier: Modifier = Modifier,
     numeric: Boolean = false,
     prefix: String? = null,
@@ -34,7 +39,7 @@ fun ValidatedField(
         label = { Text(label) },
         prefix = prefix?.let { { Text(it) } },
         isError = error != null,
-        supportingText = error?.let { { Text(it) } },
+        supportingText = error?.let { { Text(stringResource(it.messageRes())) } },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = if (numeric) KeyboardType.Decimal else KeyboardType.Text),
         modifier = modifier,
@@ -45,8 +50,8 @@ fun ValidatedField(
 fun ClientField(state: EditorState, viewModel: EditorViewModel, modifier: Modifier = Modifier) {
     ValidatedField(
         value = state.clientName,
-        onValueChange = viewModel::onClientName,
-        label = "Client",
+        onValueChange = { viewModel.onClientName(it.filter(FieldValidation::isClientChar)) },
+        label = stringResource(R.string.field_client),
         error = state.clientError.takeIf { state.showErrors },
         modifier = modifier.fillMaxWidth(),
     )
@@ -66,7 +71,7 @@ fun LineFields(
             ValidatedField(
                 value = line.description,
                 onValueChange = { viewModel.onLine(index, line.copy(description = it.take(120))) },
-                label = "Description",
+                label = stringResource(R.string.field_description),
                 error = line.descriptionError.takeIf { showErrors },
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -75,7 +80,7 @@ fun LineFields(
             ValidatedField(
                 value = line.quantity,
                 onValueChange = { viewModel.onLine(index, line.copy(quantity = it)) },
-                label = "Hours / qty",
+                label = stringResource(R.string.field_quantity),
                 error = line.quantityError.takeIf { showErrors || line.quantity.isNotEmpty() },
                 numeric = true,
                 modifier = Modifier.weight(1f),
@@ -83,7 +88,7 @@ fun LineFields(
             ValidatedField(
                 value = line.unitPrice,
                 onValueChange = { viewModel.onLine(index, line.copy(unitPrice = it)) },
-                label = "Rate",
+                label = stringResource(R.string.field_rate),
                 error = line.rateError.takeIf { showErrors || line.unitPrice.isNotEmpty() },
                 numeric = true,
                 prefix = "€ ",
@@ -95,7 +100,7 @@ fun LineFields(
                 FilterChip(
                     selected = line.vatRate == rate,
                     onClick = { viewModel.onLine(index, line.copy(vatRate = rate)) },
-                    label = { Text("BTW ${rate.percent}%") },
+                    label = { Text(stringResource(R.string.vat_chip, rate.percent)) },
                 )
             }
         }
@@ -105,9 +110,9 @@ fun LineFields(
 @Composable
 fun TotalsBlock(totals: InvoiceTotals, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        TotalRow("Subtotal", totals.net.format())
-        totals.vatLines.forEach { TotalRow("BTW ${it.rate.percent}%", it.vat.format()) }
-        TotalRow("Total", totals.gross.format(), emphasized = true)
+        TotalRow(stringResource(R.string.subtotal), totals.net.format())
+        totals.vatLines.forEach { TotalRow(stringResource(R.string.vat_chip, it.rate.percent), it.vat.format()) }
+        TotalRow(stringResource(R.string.total), totals.gross.format(), emphasized = true)
     }
 }
 

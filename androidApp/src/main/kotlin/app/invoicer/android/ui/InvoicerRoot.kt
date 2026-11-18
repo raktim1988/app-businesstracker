@@ -1,5 +1,9 @@
 package app.invoicer.android.ui
 
+import app.invoicer.android.ui.settings.SettingsScreen
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import app.invoicer.android.R
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -33,11 +37,11 @@ import app.invoicer.data.AppContainer
 
 private const val EDITOR = "editor"
 
-private enum class Tab(val route: String, val label: String, val icon: ImageVector) {
-    Home("home", "Home", Icons.Filled.Home),
-    Invoices("invoices", "Invoices", Icons.Filled.Receipt),
-    Clients("clients", "Clients", Icons.Filled.People),
-    Settings("settings", "Settings", Icons.Filled.Settings),
+private enum class Tab(val route: String, @StringRes val label: Int, val icon: ImageVector) {
+    Home("home", R.string.tab_home, Icons.Filled.Home),
+    Invoices("invoices", R.string.tab_invoices, Icons.Filled.Receipt),
+    Clients("clients", R.string.tab_clients, Icons.Filled.People),
+    Settings("settings", R.string.tab_settings, Icons.Filled.Settings),
 }
 
 @Composable
@@ -61,7 +65,7 @@ fun InvoicerRoot(container: AppContainer) {
                                 }
                             },
                             icon = { Icon(tab.icon, contentDescription = null) },
-                            label = { Text(tab.label) },
+                            label = { Text(stringResource(tab.label)) },
                         )
                     }
                 }
@@ -82,8 +86,8 @@ fun InvoicerRoot(container: AppContainer) {
             composable(Tab.Invoices.route) {
                 InvoiceListScreen(invoicesVm) { navController.navigate(EDITOR) }
             }
-            composable(Tab.Clients.route) { PlaceholderScreen("Clients") }
-            composable(Tab.Settings.route) { PlaceholderScreen("Settings") }
+            composable(Tab.Clients.route) { PlaceholderScreen(stringResource(R.string.clients_coming)) }
+            composable(Tab.Settings.route) { SettingsScreen() }
             composable(EDITOR) {
                 // Shares the Home draft so "More lines…" keeps what was typed
                 val homeEntry = remember(it) { navController.getBackStackEntry(Tab.Home.route) }

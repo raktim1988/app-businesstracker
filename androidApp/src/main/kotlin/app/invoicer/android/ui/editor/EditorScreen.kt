@@ -1,5 +1,7 @@
 package app.invoicer.android.ui.editor
 
+import androidx.compose.ui.res.stringResource
+import app.invoicer.android.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -33,24 +35,24 @@ fun EditorScreen(viewModel: EditorViewModel, onClose: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item {
-            Text("New invoice", style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(R.string.editor_title), style = MaterialTheme.typography.headlineSmall)
         }
         item { ClientField(state, viewModel) }
         itemsIndexed(state.lines) { index, line ->
             LineFields(index, line, state.showErrors, viewModel)
             if (state.lines.size > 1) {
-                TextButton(onClick = { viewModel.removeLine(index) }) { Text("Remove line") }
+                TextButton(onClick = { viewModel.removeLine(index) }) { Text(stringResource(R.string.remove_line)) }
             }
             HorizontalDivider(Modifier.padding(top = 4.dp))
         }
         item {
-            OutlinedButton(onClick = viewModel::addLine, modifier = Modifier.fillMaxWidth()) { Text("Add line") }
+            OutlinedButton(onClick = viewModel::addLine, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.add_line)) }
         }
         item { TotalsBlock(state.totals, Modifier.padding(vertical = 8.dp)) }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = onClose, modifier = Modifier.weight(1f)) { Text("Cancel") }
-                Button(onClick = viewModel::save, modifier = Modifier.weight(1f)) { Text("Save draft") }
+                OutlinedButton(onClick = onClose, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.cancel)) }
+                Button(onClick = viewModel::save, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.save_draft)) }
             }
         }
     }

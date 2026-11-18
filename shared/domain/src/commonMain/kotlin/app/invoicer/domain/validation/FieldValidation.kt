@@ -10,40 +10,52 @@ fun parseScaled(text: String, decimals: Int): Long? {
     return (parts[0] + fraction.padEnd(decimals, '0')).toLongOrNull()
 }
 
-/** Field rules shared by all platforms. Each returns an error message or null when valid. */
+/** Language-neutral validation result; each platform maps it to a localized message. */
+enum class FieldError {
+    ClientRequired, ClientTooShort, ClientTooLong, ClientInvalidChars,
+    DescriptionRequired, DescriptionTooLong,
+    QuantityRequired, QuantityFormat, QuantityNotPositive, QuantityTooLarge,
+    RateRequired, RateFormat, RateNotPositive, RateTooLarge,
+}
+
+/** Field rules shared by all platforms. Each returns an error code or null when valid. */
 object FieldValidation {
     const val MAX_QUANTITY_MILLI = 99_999_999L // 99.999,999
     const val MAX_RATE_CENTS = 100_000_000L // € 1.000.000,00
 
-    fun client(value: String): String? = when {
-        value.isBlank() -> "Client is required"
-        value.trim().length < 2 -> "Enter at least 2 characters"
-        value.trim().length > 80 -> "Maximum 80 characters"
+    /** Letters (any language, so accents are fine), digits, spaces and . - ' & only. */
+    fun isClientChar(c: Char) = c.isLetterOrDigit() || c == ' ' || c == '.' || c == '-' || c == '\'' || c == '&'
+
+    fun client(value: String): FieldError? = when {
+        value.isBlank() -> FieldError.ClientRequired
+        value.trim().length < 2 -> FieldError.ClientTooShort
+        value.trim().length > 80 -> FieldError.ClientTooLong
+        !value.all(::isClientChar) -> FieldError.ClientInvalidChars
         else -> null
     }
 
-    fun description(value: String): String? = when {
-        value.isBlank() -> "Description is required"
-        value.trim().length > 120 -> "Maximum 120 characters"
+    fun description(value: String): FieldError? = when {
+        value.isBlank() -> FieldError.DescriptionRequired
+        value.trim().length > 120 -> FieldError.DescriptionTooLong
         else -> null
     }
 
-    fun quantity(value: String): String? {
-        if (value.isBlank()) return "Quantity is required"
-        val scaled = parseScaled(value, 3) ?: return "Use a number, max 3 decimals"
+    fun quantity(value: String): FieldError? {
+        if (value.isBlank()) return FieldError.QuantityRequired
+        val scaled = parseScaled(value, 3) ?: return FieldError.QuantityFormat
         return when {
-            scaled <= 0 -> "Must be greater than 0"
-            scaled > MAX_QUANTITY_MILLI -> "Too large"
+            scaled <= 0 -> FieldError.QuantityNotPositive
+            scaled > MAX_QUANTITY_MILLI -> FieldError.QuantityTooLarge
             else -> null
         }
     }
 
-    fun rate(value: String): String? {
-        if (value.isBlank()) return "Rate is required"
-        val scaled = parseScaled(value, 2) ?: return "Use an amount, max 2 decimals"
+    fun rate(value: String): FieldError? {
+        if (value.isBlank()) return FieldError.RateRequired
+        val scaled = parseScaled(value, 2) ?: return FieldError.RateFormat
         return when {
-            scaled <= 0 -> "Must be greater than 0"
-            scaled > MAX_RATE_CENTS -> "Too large"
+            scaled <= 0 -> FieldError.RateNotPositive
+            scaled > MAX_RATE_CENTS -> FieldError.RateTooLarge
             else -> null
         }
     }

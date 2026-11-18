@@ -1,5 +1,8 @@
 package app.invoicer.android.ui.invoices
 
+import app.invoicer.android.ui.labelRes
+import androidx.compose.ui.res.stringResource
+import app.invoicer.android.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,26 +34,27 @@ import app.invoicer.domain.model.Invoice
 @Composable
 fun InvoiceListScreen(viewModel: InvoicesViewModel, onNewInvoice: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val fabLabel = stringResource(R.string.new_invoice_fab)
     Box(Modifier.fillMaxSize()) {
         if (state.invoices.isEmpty()) {
             Column(Modifier.padding(16.dp)) {
-                Text("Invoices", style = MaterialTheme.typography.headlineMedium)
-                Text("No invoices yet", Modifier.padding(top = 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.invoices_title), style = MaterialTheme.typography.headlineMedium)
+                Text(stringResource(R.string.no_invoices), Modifier.padding(top = 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             LazyColumn(
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 88.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                item { Text("Invoices", style = MaterialTheme.typography.headlineMedium) }
+                item { Text(stringResource(R.string.invoices_title), style = MaterialTheme.typography.headlineMedium) }
                 items(state.invoices, key = { it.id }) { InvoiceRow(it) }
             }
         }
         ExtendedFloatingActionButton(
             onClick = onNewInvoice,
             icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-            text = { Text("New invoice") },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp).semantics { contentDescription = "New invoice" },
+            text = { Text(stringResource(R.string.new_invoice_fab)) },
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp).semantics { contentDescription = fabLabel },
         )
     }
 }
@@ -61,7 +65,7 @@ fun InvoiceRow(invoice: Invoice) {
         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(1f)) {
                 Text(invoice.clientName, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("${invoice.number} · ${invoice.status}", style = MaterialTheme.typography.bodySmall)
+                Text("${invoice.number} · ${stringResource(invoice.status.labelRes())}", style = MaterialTheme.typography.bodySmall)
             }
             Text(InvoiceCalculator.totals(invoice.lines).gross.format(), style = MaterialTheme.typography.titleMedium)
         }

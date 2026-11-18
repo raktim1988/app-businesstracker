@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tab_home">Home</string>
+    <string name="tab_invoices">Invoices</string>
+    <string name="tab_clients">Clients</string>
+    <string name="tab_settings">Settings</string>
+
+    <string name="home_title">Invoicer</string>
+    <string name="home_subtitle">Invoices &amp; hours for freelancers</string>
+    <string name="stat_outstanding">Outstanding</string>
+    <string name="stat_overdue">Overdue</string>
+    <string name="stat_paid_month">Paid (month)</string>
+    <string name="quick_invoice">Quick invoice</string>
+    <string name="add_more_lines">Add more lines</string>
+    <string name="create_invoice">Create invoice</string>
+    <string name="recent">Recent</string>
+    <string name="see_all">See all</string>
+    <string name="get_started_title">Get started in 3 steps</string>
+    <string name="get_started_1">1. Fill in the quick invoice above</string>
+    <string name="get_started_2">2. Check the BTW and total</string>
+    <string name="get_started_3">3. Tap Create invoice, and it shows up here</string>
+    <string name="good_to_know">Good to know</string>
+    <string name="tip_btw_title">BTW rates</string>
+    <string name="tip_btw_body">Standard 21%, reduced 9%, and 0% for exempt or reverse-charge sales. Pick one per line.</string>
+    <string name="tip_numbers_title">Gap-free numbers</string>
+    <string name="tip_numbers_body">Invoice numbers run in sequence (2026-0001, 2026-0002…) with no gaps. Sent invoices are locked.</string>
+    <string name="tip_term_title">Payment term</string>
+    <string name="tip_term_body">14 days is the common default. Add your IBAN so clients can pay straight away.</string>
+    <string name="tip_required_title">Must be on every invoice</string>
+    <string name="tip_required_body">Your name, KvK and BTW number, the client, date, number, description, amount and BTW.</string>
+
+    <string name="invoices_title">Invoices</string>
+    <string name="no_invoices">No invoices yet</string>
+    <string name="new_invoice_fab">New invoice</string>
+    <string name="status_draft">Draft</string>
+    <string name="status_sent">Sent</string>
+    <string name="status_paid">Paid</string>
+
+    <string name="editor_title">New invoice</string>
+    <string name="field_client">Client</string>
+    <string name="field_description">Description</string>
+    <string name="field_quantity">Hours / qty</string>
+    <string name="field_rate">Rate</string>
+    <string name="vat_chip">BTW %1$d%%</string>
+    <string name="remove_line">Remove line</string>
+    <string name="add_line">Add line</string>
+    <string name="subtotal">Subtotal</string>
+    <string name="total">Total</string>
+    <string name="cancel">Cancel</string>
+    <string name="save_draft">Save draft</string>
+
+    <string name="clients_coming">Clients — coming in v0.2</string>
+    <string name="settings_title">Settings</string>
+    <string name="language">Language</string>
+    <string name="language_system">System default</string>
+    <string name="language_en">English</string>
+    <string name="language_nl">Nederlands</string>
+
+    <string name="err_client_required">Client is required</string>
+    <string name="err_client_short">Enter at least 2 characters</string>
+    <string name="err_client_long">Maximum 80 characters</string>
+    <string name="err_client_chars">Use letters, numbers, spaces and . - \' &amp; only</string>
+    <string name="err_description_required">Description is required</string>
+    <string name="err_description_long">Maximum 120 characters</string>
+    <string name="err_quantity_required">Quantity is required</string>
+    <string name="err_quantity_format">Use a number, max 3 decimals</string>
+    <string name="err_not_positive">Must be greater than 0</string>
+    <string name="err_too_large">Too large</string>
+    <string name="err_rate_required">Rate is required</string>
+    <string name="err_rate_format">Use an amount, max 2 decimals</string>
+</resources>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tab_home">Home</string>
+    <string name="tab_invoices">Facturen</string>
+    <string name="tab_clients">Klanten</string>
+    <string name="tab_settings">Instellingen</string>
+
+    <string name="home_title">Invoicer</string>
+    <string name="home_subtitle">Facturen &amp; uren voor zzp\'ers</string>
+    <string name="stat_outstanding">Openstaand</string>
+    <string name="stat_overdue">Verlopen</string>
+    <string name="stat_paid_month">Betaald (maand)</string>
+    <string name="quick_invoice">Snelfactuur</string>
+    <string name="add_more_lines">Meer regels toevoegen</string>
+    <string name="create_invoice">Factuur maken</string>
+    <string name="recent">Recent</string>
+    <string name="see_all">Alles bekijken</string>
+    <string name="get_started_title">Aan de slag in 3 stappen</string>
+    <string name="get_started_1">1. Vul de snelfactuur hierboven in</string>
+    <string name="get_started_2">2. Controleer de btw en het totaal</string>
+    <string name="get_started_3">3. Tik op Factuur maken, hij verschijnt hier</string>
+    <string name="good_to_know">Handig om te weten</string>
+    <string name="tip_btw_title">Btw-tarieven</string>
+    <string name="tip_btw_body">Hoog 21%, laag 9% en 0% voor vrijgestelde of verlegde omzet. Kies er één per regel.</string>
+    <string name="tip_numbers_title">Doorlopende nummers</string>
+    <string name="tip_numbers_body">Factuurnummers lopen op zonder gaten (2026-0001, 2026-0002…). Verzonden facturen zijn vergrendeld.</string>
+    <string name="tip_term_title">Betaaltermijn</string>
+    <string name="tip_term_body">14 dagen is gebruikelijk. Voeg je IBAN toe zodat klanten direct kunnen betalen.</string>
+    <string name="tip_required_title">Verplicht op elke factuur</string>
+    <string name="tip_required_body">Je naam, KvK- en btw-nummer, de klant, datum, nummer, omschrijving, bedrag en btw.</string>
+
+    <string name="invoices_title">Facturen</string>
+    <string name="no_invoices">Nog geen facturen</string>
+    <string name="new_invoice_fab">Nieuwe factuur</string>
+    <string name="status_draft">Concept</string>
+    <string name="status_sent">Verzonden</string>
+    <string name="status_paid">Betaald</string>
+
+    <string name="editor_title">Nieuwe factuur</string>
+    <string name="field_client">Klant</string>
+    <string name="field_description">Omschrijving</string>
+    <string name="field_quantity">Uren / aantal</string>
+    <string name="field_rate">Tarief</string>
+    <string name="vat_chip">Btw %1$d%%</string>
+    <string name="remove_line">Regel verwijderen</string>
+    <string name="add_line">Regel toevoegen</string>
+    <string name="subtotal">Subtotaal</string>
+    <string name="total">Totaal</string>
+    <string name="cancel">Annuleren</string>
+    <string name="save_draft">Concept opslaan</string>
+
+    <string name="clients_coming">Klanten — komt in v0.2</string>
+    <string name="settings_title">Instellingen</string>
+    <string name="language">Taal</string>
+    <string name="language_system">Systeemstandaard</string>
+    <string name="language_en">English</string>
+    <string name="language_nl">Nederlands</string>
+
+    <string name="err_client_required">Klant is verplicht</string>
+    <string name="err_client_short">Vul minimaal 2 tekens in</string>
+    <string name="err_client_long">Maximaal 80 tekens</string>
+    <string name="err_client_chars">Alleen letters, cijfers, spaties en . - \' &amp;</string>
+    <string name="err_description_required">Omschrijving is verplicht</string>
+    <string name="err_description_long">Maximaal 120 tekens</string>
+    <string name="err_quantity_required">Aantal is verplicht</string>
+    <string name="err_quantity_format">Gebruik een getal, max. 3 decimalen</string>
+    <string name="err_not_positive">Moet groter zijn dan 0</string>
+    <string name="err_too_large">Te groot</string>
+    <string name="err_rate_required">Tarief is verplicht</string>
+    <string name="err_rate_format">Gebruik een bedrag, max. 2 decimalen</string>
+</resources>

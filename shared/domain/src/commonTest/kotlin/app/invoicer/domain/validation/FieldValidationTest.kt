@@ -29,4 +29,13 @@ class FieldValidationTest {
         assertNull(FieldValidation.rate("85"))
         assertNotNull(FieldValidation.description(""))
     }
+
+    @Test
+    fun `client name rejects special characters but allows accents and business punctuation`() {
+        assertEquals(FieldError.ClientInvalidChars, FieldValidation.client("Acme @#!"))
+        assertEquals(FieldError.ClientInvalidChars, FieldValidation.client("Acme<script>"))
+        assertNull(FieldValidation.client("Café Müller"))
+        assertNull(FieldValidation.client("Bakker & Zn."))
+        assertNull(FieldValidation.client("O'Neil-Jansen 2"))
+    }
 }
