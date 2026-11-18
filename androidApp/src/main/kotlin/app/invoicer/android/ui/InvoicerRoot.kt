@@ -13,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -83,7 +84,9 @@ fun InvoicerRoot(container: AppContainer) {
             composable(Tab.Clients.route) { PlaceholderScreen("Clients") }
             composable(Tab.Settings.route) { PlaceholderScreen("Settings") }
             composable(EDITOR) {
-                val vm: EditorViewModel = viewModel(factory = EditorViewModel.factory(container))
+                // Shares the Home draft so "More lines…" keeps what was typed
+                val homeEntry = remember(it) { navController.getBackStackEntry(Tab.Home.route) }
+                val vm: EditorViewModel = viewModel(homeEntry, factory = EditorViewModel.factory(container))
                 EditorScreen(vm, onClose = { navController.popBackStack() })
             }
         }
