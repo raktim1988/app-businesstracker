@@ -7,6 +7,7 @@ import app.invoicer.domain.model.InvoiceLine
 import app.invoicer.domain.model.InvoiceStatus
 import app.invoicer.domain.model.Money
 import app.invoicer.domain.model.VatRate
+import kotlinx.coroutines.flow.first
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
@@ -25,6 +26,7 @@ object DemoData {
     )
 
     suspend fun seed(container: AppContainer) {
+        if (container.clientRepository.observeAll().first().isNotEmpty()) return
         clients.forEach { container.clientRepository.upsert(it) }
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
         data class Sample(val client: Int, val daysAgo: Int, val status: InvoiceStatus, val lines: List<InvoiceLine>)

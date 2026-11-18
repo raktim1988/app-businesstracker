@@ -1,0 +1,91 @@
+-- Every row carries a UUID id, updated_at (epoch ms) and version so a sync layer can be added later.
+
+CREATE TABLE client (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    kvk_number TEXT NOT NULL,
+    btw_number TEXT NOT NULL,
+    payment_term_days INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    version INTEGER NOT NULL
+);
+
+CREATE TABLE invoice (
+    id TEXT NOT NULL PRIMARY KEY,
+    number TEXT NOT NULL UNIQUE,
+    client_id TEXT NOT NULL,
+    client_name TEXT NOT NULL,
+    status TEXT NOT NULL,
+    issue_date TEXT NOT NULL,
+    due_date TEXT NOT NULL,
+    updated_at INTEGER NOT NULL,
+    version INTEGER NOT NULL
+);
+
+CREATE TABLE invoice_line (
+    invoice_id TEXT NOT NULL REFERENCES invoice(id) ON DELETE CASCADE,
+    position INTEGER NOT NULL,
+    description TEXT NOT NULL,
+    quantity_milli INTEGER NOT NULL,
+    unit_price_cents INTEGER NOT NULL,
+    vat_percent INTEGER NOT NULL,
+    PRIMARY KEY (invoice_id, position)
+);
+
+CREATE TABLE business_profile (
+    id INTEGER NOT NULL PRIMARY KEY CHECK (id = 1),
+    name TEXT NOT NULL,
+    kvk_number TEXT NOT NULL,
+    btw_number TEXT NOT NULL,
+    iban TEXT NOT NULL,
+    default_payment_term_days INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    version INTEGER NOT NULL
+);
+
+selectClients:
+SELECT * FROM client ORDER BY name COLLATE NOCASE;
+
+clientVersion:
+SELECT version FROM client WHERE id = ?;
+
+upsertClient:
+INSERT OR REPLACE INTO client(id, name, email, kvk_number, btw_number, payment_term_days, updated_at, version)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+selectInvoices:
+SELECT * FROM invoice ORDER BY number DESC;
+
+selectInvoice:
+SELECT * FROM invoice WHERE id = ?;
+
+invoiceVersion:
+SELECT version FROM invoice WHERE id = ?;
+
+upsertInvoice:
+INSERT OR REPLACE INTO invoice(id, number, client_id, client_name, status, issue_date, due_date, updated_at, version)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectAllLines:
+SELECT * FROM invoice_line ORDER BY invoice_id, position;
+
+selectLines:
+SELECT * FROM invoice_line WHERE invoice_id = ? ORDER BY position;
+
+deleteLines:
+DELETE FROM invoice_line WHERE invoice_id = ?;
+
+insertLine:
+INSERT INTO invoice_line(invoice_id, position, description, quantity_milli, unit_price_cents, vat_percent)
+VALUES (?, ?, ?, ?, ?, ?);
+
+invoiceNumbersWithPrefix:
+SELECT number FROM invoice WHERE number LIKE ? || '%';
+
+selectProfile:
+SELECT * FROM business_profile WHERE id = 1;
+
+upsertProfile:
+INSERT OR REPLACE INTO business_profile(id, name, kvk_number, btw_number, iban, default_payment_term_days, updated_at, version)
+VALUES (1, ?, ?, ?, ?, ?, ?, ?);

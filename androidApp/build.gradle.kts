@@ -34,6 +34,7 @@ android {
 
 dependencies {
     implementation(project(":shared:data"))
+    implementation(libs.sqldelight.android)
 
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
