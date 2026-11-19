@@ -17,7 +17,7 @@ data class BusinessProfile(
     val kvkNumber: String = "",
     val btwNumber: String = "",
     val iban: String = "",
-    val defaultPaymentTermDays: Int = 30,
+    val defaultPaymentTermDays: Int = 14,
 )
 
 data class Client(
@@ -26,7 +26,7 @@ data class Client(
     val email: String = "",
     val kvkNumber: String = "",
     val btwNumber: String = "",
-    val paymentTermDays: Int = 30,
+    val paymentTermDays: Int = 14,
 )
 
 /** [quantityMilli] is the quantity in thousandths (1.5 hours = 1500). */

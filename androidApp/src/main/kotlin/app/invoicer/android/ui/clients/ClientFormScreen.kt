@@ -35,7 +35,7 @@ fun ClientFormScreen(initial: Client?, onSave: (Client) -> Unit, onClose: () -> 
     var email by rememberSaveable { mutableStateOf(initial?.email.orEmpty()) }
     var kvk by rememberSaveable { mutableStateOf(initial?.kvkNumber.orEmpty()) }
     var btw by rememberSaveable { mutableStateOf(initial?.btwNumber.orEmpty()) }
-    var term by rememberSaveable { mutableStateOf((initial?.paymentTermDays ?: 30).toString()) }
+    var term by rememberSaveable { mutableStateOf((initial?.paymentTermDays ?: 14).toString()) }
     var showErrors by rememberSaveable { mutableStateOf(false) }
 
     val nameError = FieldValidation.client(name)

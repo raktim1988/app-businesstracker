@@ -48,7 +48,7 @@ data class CreatedInvoice(val id: String, val number: String)
 data class EditorState(
     val clientName: String = "",
     val clientId: String = "",
-    val paymentTermDays: Int = 30,
+    val paymentTermDays: Int = 14,
     val issueDate: LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
     val lines: List<LineInput> = listOf(LineInput()),
     val totals: InvoiceTotals = InvoiceCalculator.totals(emptyList()),
@@ -74,7 +74,7 @@ class EditorViewModel(private val container: AppContainer) : ViewModel() {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun onClientName(value: String) =
-        _state.update { it.copy(clientName = value.take(80), clientId = "", paymentTermDays = 30) }
+        _state.update { it.copy(clientName = value.take(80), clientId = "", paymentTermDays = 14) }
 
     fun pickClient(client: Client) =
         _state.update { it.copy(clientName = client.name, clientId = client.id, paymentTermDays = client.paymentTermDays) }
