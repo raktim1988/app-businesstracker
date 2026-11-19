@@ -38,6 +38,7 @@ fun EditorScreen(viewModel: EditorViewModel, onClose: () -> Unit) {
             Text(stringResource(R.string.editor_title), style = MaterialTheme.typography.headlineSmall)
         }
         item { ClientField(state, viewModel) }
+        item { InvoiceDateField(state, viewModel) }
         itemsIndexed(state.lines) { index, line ->
             LineFields(index, line, state.showErrors, viewModel)
             if (state.lines.size > 1) {

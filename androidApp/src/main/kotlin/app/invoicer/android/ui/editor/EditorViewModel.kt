@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
@@ -42,15 +43,19 @@ data class LineInput(
     val isValid get() = descriptionError == null && quantityError == null && rateError == null
 }
 
+data class CreatedInvoice(val id: String, val number: String)
+
 data class EditorState(
     val clientName: String = "",
     val clientId: String = "",
     val paymentTermDays: Int = 30,
+    val issueDate: LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault()),
     val lines: List<LineInput> = listOf(LineInput()),
     val totals: InvoiceTotals = InvoiceCalculator.totals(emptyList()),
     val showErrors: Boolean = false,
     val saved: Boolean = false,
 ) {
+    val dueDate get() = issueDate.plus(DatePeriod(days = paymentTermDays))
     val clientError get() = FieldValidation.client(clientName)
     val isValid get() = clientError == null && lines.isNotEmpty() && lines.all { it.isValid }
 }
@@ -58,6 +63,12 @@ data class EditorState(
 class EditorViewModel(private val container: AppContainer) : ViewModel() {
     private val _state = MutableStateFlow(EditorState())
     val state: StateFlow<EditorState> = _state.asStateFlow()
+
+    /** Kept outside [EditorState] so reset() does not wipe it before Home has shown the confirmation. */
+    private val _justCreated = MutableStateFlow<CreatedInvoice?>(null)
+    val justCreated: StateFlow<CreatedInvoice?> = _justCreated.asStateFlow()
+
+    fun consumeJustCreated() = _justCreated.update { null }
 
     val clients: StateFlow<List<Client>> = container.clientRepository.observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -80,6 +91,8 @@ class EditorViewModel(private val container: AppContainer) : ViewModel() {
         s.copy(lines = lines, totals = totalsOf(lines))
     }
 
+    fun onIssueDate(date: LocalDate) = _state.update { it.copy(issueDate = date) }
+
     fun reset() = _state.update { EditorState() }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -90,17 +103,17 @@ class EditorViewModel(private val container: AppContainer) : ViewModel() {
             return
         }
         viewModelScope.launch {
-            val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
             val invoice = Invoice(
                 id = Uuid.random().toString(),
-                number = container.invoiceRepository.nextNumber(today.year),
+                number = container.invoiceRepository.nextNumber(s.issueDate.year),
                 clientId = s.clientId,
                 clientName = s.clientName.trim(),
-                issueDate = today,
-                dueDate = today.plus(DatePeriod(days = s.paymentTermDays)),
+                issueDate = s.issueDate,
+                dueDate = s.dueDate,
                 lines = s.lines.mapNotNull(::toDomain),
             )
             val error = container.saveInvoice(invoice)
+            if (error == null) _justCreated.value = CreatedInvoice(invoice.id, invoice.number)
             _state.update { it.copy(showErrors = error != null, saved = error == null) }
         }
     }

@@ -145,4 +145,19 @@
     <string name="about_title">Over de app</string>
     <string name="about_version">Invoicer %1$s</string>
     <string name="about_privacy">Je gegevens blijven op dit apparaat. Er wordt niets geüpload en je hebt geen account nodig.</string>
+    <string name="lock_title">Appvergrendeling</string>
+    <string name="lock_desc">Vraag om je vingerafdruk, gezicht of schermvergrendeling bij het openen van Invoicer.</string>
+    <string name="lock_unavailable">Stel eerst een schermvergrendeling of vingerafdruk in op dit apparaat.</string>
+    <string name="lock_enable_prompt">Appvergrendeling inschakelen</string>
+    <string name="locked_title">Invoicer is vergrendeld</string>
+    <string name="locked_body">Je facturen zijn beveiligd.</string>
+    <string name="unlock">Ontgrendelen</string>
+    <string name="unlock_prompt">Invoicer ontgrendelen</string>
+    <string name="invoice_created">Factuur %1$s aangemaakt</string>
+    <string name="view">Bekijken</string>
+    <string name="invoice_date">Factuurdatum</string>
+    <string name="due_on">Vervalt op %1$s</string>
+    <string name="ok">OK</string>
+    <string name="save_pdf">PDF opslaan</string>
+    <string name="pdf_saved">PDF opgeslagen</string>
 </resources>

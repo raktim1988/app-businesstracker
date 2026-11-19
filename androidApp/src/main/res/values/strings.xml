@@ -145,4 +145,19 @@
     <string name="about_title">About</string>
     <string name="about_version">Invoicer %1$s</string>
     <string name="about_privacy">Your data stays on this device. Nothing is uploaded and no account is needed.</string>
+    <string name="lock_title">App lock</string>
+    <string name="lock_desc">Ask for your fingerprint, face or screen lock when opening Invoicer.</string>
+    <string name="lock_unavailable">Set a screen lock or fingerprint on this device first.</string>
+    <string name="lock_enable_prompt">Turn on app lock</string>
+    <string name="locked_title">Invoicer is locked</string>
+    <string name="locked_body">Your invoices are protected.</string>
+    <string name="unlock">Unlock</string>
+    <string name="unlock_prompt">Unlock Invoicer</string>
+    <string name="invoice_created">Invoice %1$s created</string>
+    <string name="view">View</string>
+    <string name="invoice_date">Invoice date</string>
+    <string name="due_on">Due on %1$s</string>
+    <string name="ok">OK</string>
+    <string name="save_pdf">Save PDF</string>
+    <string name="pdf_saved">PDF saved</string>
 </resources>

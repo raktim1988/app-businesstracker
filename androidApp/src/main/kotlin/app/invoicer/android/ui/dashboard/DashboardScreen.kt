@@ -2,6 +2,12 @@ package app.invoicer.android.ui.dashboard
 
 import androidx.compose.ui.res.stringResource
 import app.invoicer.android.R
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.invoicer.android.ui.editor.ClientField
 import app.invoicer.android.ui.editor.EditorViewModel
+import app.invoicer.android.ui.editor.InvoiceDateField
 import app.invoicer.android.ui.editor.LineFields
 import app.invoicer.android.ui.editor.TotalsBlock
 import app.invoicer.android.ui.invoices.InvoiceRow
@@ -42,12 +49,25 @@ fun DashboardScreen(
     editorViewModel: EditorViewModel,
     onOpenInvoices: () -> Unit,
     onOpenInvoice: (Invoice) -> Unit,
+    onOpenInvoiceId: (String) -> Unit,
     onOpenEditor: () -> Unit,
 ) {
     val invoices by invoicesViewModel.state.collectAsStateWithLifecycle()
     val editor by editorViewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(editor.saved) { if (editor.saved) editorViewModel.reset() }
 
+    val created by editorViewModel.justCreated.collectAsStateWithLifecycle()
+    val snackbarHost = remember { SnackbarHostState() }
+    val createdMessage = created?.let { stringResource(R.string.invoice_created, it.number) }
+    val viewLabel = stringResource(R.string.view)
+    LaunchedEffect(created) {
+        val info = created ?: return@LaunchedEffect
+        editorViewModel.consumeJustCreated()
+        val result = snackbarHost.showSnackbar(createdMessage.orEmpty(), actionLabel = viewLabel, duration = SnackbarDuration.Long)
+        if (result == SnackbarResult.ActionPerformed) onOpenInvoiceId(info.id)
+    }
+
+    Box(Modifier.fillMaxSize()) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().imePadding(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
@@ -78,6 +98,7 @@ fun DashboardScreen(
                 Column(Modifier.padding(16.dp)) {
                     Text(stringResource(R.string.quick_invoice), style = MaterialTheme.typography.titleMedium)
                     ClientField(editor, editorViewModel, Modifier.padding(top = 8.dp))
+                    InvoiceDateField(editor, editorViewModel, Modifier.padding(top = 8.dp))
                     LineFields(0, editor.lines[0], editor.showErrors, editorViewModel)
                     TotalsBlock(editor.totals, Modifier.padding(vertical = 8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -106,6 +127,8 @@ fun DashboardScreen(
         }
         item { Text(stringResource(R.string.good_to_know), style = MaterialTheme.typography.titleMedium) }
         items(TIPS) { TipCard(stringResource(it.first), stringResource(it.second)) }
+    }
+    SnackbarHost(snackbarHost, Modifier.align(Alignment.BottomCenter))
     }
 }
 

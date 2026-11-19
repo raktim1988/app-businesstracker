@@ -28,6 +28,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import app.invoicer.android.R
+import androidx.compose.material3.Switch
+import androidx.fragment.app.FragmentActivity
+import app.invoicer.android.security.AppLock
 import app.invoicer.android.ui.LanguagePrefs
 import app.invoicer.android.ui.components.InfoCard
 import app.invoicer.android.ui.editor.ValidatedField
@@ -56,6 +59,8 @@ fun SettingsScreen(profileViewModel: BusinessProfileViewModel) {
     ) {
         Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineMedium)
         profile?.let { BusinessSection(it, profileViewModel::save) }
+        LockSection()
+        HorizontalDivider(Modifier.padding(vertical = 8.dp))
         Text(stringResource(R.string.language), style = MaterialTheme.typography.titleMedium)
         Column(Modifier.selectableGroup()) {
             options.forEach { (code, label) ->
@@ -131,4 +136,42 @@ private fun BusinessSection(saved: BusinessProfile, onSave: (BusinessProfile) ->
         if (justSaved) Text(stringResource(R.string.saved), color = MaterialTheme.colorScheme.primary)
     }
     HorizontalDivider(Modifier.padding(vertical = 8.dp))
+}
+
+@Composable
+private fun LockSection() {
+    val context = LocalContext.current
+    val available = remember { AppLock.isAvailable(context) }
+    var enabled by remember { mutableStateOf(AppLock.isEnabled(context) && available) }
+    val prompt = stringResource(R.string.lock_enable_prompt)
+
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.lock_title), style = MaterialTheme.typography.titleMedium)
+            Text(
+                stringResource(if (available) R.string.lock_desc else R.string.lock_unavailable),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Switch(
+            checked = enabled,
+            enabled = available,
+            onCheckedChange = { wanted ->
+                if (!wanted) {
+                    AppLock.setEnabled(context, false)
+                    enabled = false
+                } else if (context is FragmentActivity) {
+                    // Prove the device credential works before enabling, so the user cannot lock themselves out.
+                    AppLock.authenticate(context, prompt) { ok ->
+                        if (ok) {
+                            AppLock.setEnabled(context, true)
+                            AppLock.unlockedThisSession = true
+                            enabled = true
+                        }
+                    }
+                }
+            },
+        )
+    }
 }

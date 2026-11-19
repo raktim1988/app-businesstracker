@@ -42,6 +42,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import app.invoicer.android.pdf.InvoicePdf
 import app.invoicer.android.ui.clients.ClientDetailScreen
 import app.invoicer.android.ui.invoices.InvoiceDetailScreen
@@ -111,6 +113,7 @@ fun InvoicerRoot(container: AppContainer) {
                     editorViewModel = homeEditorVm,
                     onOpenInvoices = { navController.navigate(Tab.Invoices.route) },
                     onOpenInvoice = { navController.navigate("invoice/${it.id}") },
+                    onOpenInvoiceId = { navController.navigate("invoice/$it") },
                     onOpenEditor = { navController.navigate(EDITOR) },
                 )
             }
@@ -141,13 +144,28 @@ fun InvoicerRoot(container: AppContainer) {
                 val clients by clientsVm.clients.collectAsStateWithLifecycle()
                 val profile by profileVm.profile.collectAsStateWithLifecycle()
                 val invoice = state.invoices.firstOrNull { it.id == id }
+                val client = invoice?.let { inv -> clients.firstOrNull { inv.belongsTo(it) } }
+                val savePdf = rememberLauncherForActivityResult(
+                    ActivityResultContracts.CreateDocument("application/pdf"),
+                ) { uri ->
+                    if (uri == null || invoice == null) return@rememberLauncherForActivityResult
+                    scope.launch {
+                        val saved = runCatching {
+                            withContext(Dispatchers.IO) {
+                                val file = InvoicePdf.create(context, invoice, client, profile ?: BusinessProfile())
+                                context.contentResolver.openOutputStream(uri)!!.use { out -> file.inputStream().use { it.copyTo(out) } }
+                            }
+                        }.isSuccess
+                        Toast.makeText(context, if (saved) R.string.pdf_saved else R.string.pdf_error, Toast.LENGTH_LONG).show()
+                    }
+                }
                 if (invoice != null) {
-                    val client = clients.firstOrNull { invoice.belongsTo(it) }
                     InvoiceDetailScreen(
                         invoice = invoice,
                         onBack = { navController.popBackStack() },
                         onOpenClient = client?.let { c -> { navController.navigate("client/${c.id}") } },
                         onSetStatus = { invoicesVm.setStatus(invoice, it) },
+                        onSavePdf = { savePdf.launch("${context.getString(R.string.pdf_invoice).lowercase()}-${invoice.number}.pdf") },
                         onSharePdf = {
                             scope.launch {
                                 val business = profile ?: BusinessProfile()

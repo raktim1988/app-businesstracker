@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -47,6 +48,7 @@ fun InvoiceDetailScreen(
     onOpenClient: (() -> Unit)?,
     onSetStatus: (InvoiceStatus) -> Unit,
     onSharePdf: () -> Unit,
+    onSavePdf: () -> Unit,
 ) {
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
     val overdue = invoice.isOverdue(today)
@@ -84,9 +86,15 @@ fun InvoiceDetailScreen(
         }
         Text(stringResource(hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 12.dp))
 
-        OutlinedButton(onClick = onSharePdf, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-            Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-            Text(stringResource(R.string.share_pdf))
+        Row(Modifier.padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            OutlinedButton(onClick = onSavePdf, modifier = Modifier.weight(1f)) {
+                Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                Text(stringResource(R.string.save_pdf))
+            }
+            OutlinedButton(onClick = onSharePdf, modifier = Modifier.weight(1f)) {
+                Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                Text(stringResource(R.string.share_pdf))
+            }
         }
 
         Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {

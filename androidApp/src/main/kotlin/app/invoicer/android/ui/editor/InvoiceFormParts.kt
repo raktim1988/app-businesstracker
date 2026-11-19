@@ -5,6 +5,18 @@ import app.invoicer.domain.validation.FieldError
 import app.invoicer.android.ui.messageRes
 import androidx.compose.ui.res.stringResource
 import app.invoicer.android.R
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import app.invoicer.android.ui.invoices.display
+import kotlinx.datetime.LocalDate
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -148,3 +160,36 @@ private fun TotalRow(label: String, amount: String, emphasized: Boolean = false)
         Text(amount, style = style)
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun InvoiceDateField(state: EditorState, viewModel: EditorViewModel, modifier: Modifier = Modifier) {
+    var open by remember { mutableStateOf(false) }
+    Box(modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = state.issueDate.display(),
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(R.string.invoice_date)) },
+            supportingText = { Text(stringResource(R.string.due_on, state.dueDate.display())) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Box(Modifier.matchParentSize().clickable { open = true })
+    }
+    if (open) {
+        val picker = rememberDatePickerState(initialSelectedDateMillis = state.issueDate.toEpochDays() * MILLIS_PER_DAY)
+        DatePickerDialog(
+            onDismissRequest = { open = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    picker.selectedDateMillis?.let { viewModel.onIssueDate(LocalDate.fromEpochDays(it / MILLIS_PER_DAY)) }
+                    open = false
+                }) { Text(stringResource(R.string.ok)) }
+            },
+            dismissButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.cancel)) } },
+        ) { DatePicker(picker) }
+    }
+}
+
+private const val MILLIS_PER_DAY = 86_400_000L
