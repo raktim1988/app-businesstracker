@@ -14,8 +14,9 @@ class AppContainer(
     val invoiceRepository: InvoiceRepository,
     val clientRepository: ClientRepository,
     val profileRepository: BusinessProfileRepository,
+    val syncStore: SyncStore? = null,
 ) {
-    constructor(db: InvoicerDatabase) : this(SqlInvoiceRepository(db), SqlClientRepository(db), SqlBusinessProfileRepository(db))
+    constructor(db: InvoicerDatabase) : this(SqlInvoiceRepository(db), SqlClientRepository(db), SqlBusinessProfileRepository(db), SyncStore(db))
 
     val observeInvoices: ObserveInvoicesUseCase = ObserveInvoicesUseCaseImpl(invoiceRepository)
     val saveInvoice: SaveInvoiceUseCase = SaveInvoiceUseCaseImpl(invoiceRepository)

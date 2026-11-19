@@ -182,4 +182,9 @@
     <string name="account_error_exists">Dit e-mailadres heeft al een account. Probeer in te loggen.</string>
     <string name="account_error_network">Geen verbinding. Controleer je internet en probeer opnieuw.</string>
     <string name="account_error_generic">Er ging iets mis. Probeer het opnieuw.</string>
+    <string name="sync_now">Nu synchroniseren</string>
+    <string name="sync_running">Synchroniseren…</string>
+    <string name="sync_failed">Synchroniseren mislukt. We proberen het opnieuw bij je volgende wijziging.</string>
+    <string name="sync_last">Laatst gesynchroniseerd om %1$s</string>
+    <string name="sync_never">Nog niet gesynchroniseerd</string>
 </resources>

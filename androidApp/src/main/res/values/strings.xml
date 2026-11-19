@@ -182,4 +182,9 @@
     <string name="account_error_exists">This email already has an account. Try signing in.</string>
     <string name="account_error_network">No connection. Check your internet and try again.</string>
     <string name="account_error_generic">Something went wrong. Please try again.</string>
+    <string name="sync_now">Sync now</string>
+    <string name="sync_running">Syncing…</string>
+    <string name="sync_failed">Sync failed. Will retry when you change something.</string>
+    <string name="sync_last">Last synced at %1$s</string>
+    <string name="sync_never">Not synced yet</string>
 </resources>
