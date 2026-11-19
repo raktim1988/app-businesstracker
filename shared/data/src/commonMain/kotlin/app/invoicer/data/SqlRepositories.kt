@@ -2,14 +2,17 @@ package app.invoicer.data
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.coroutines.mapToOneOrNull
 import app.invoicer.data.db.InvoicerDatabase
 import app.invoicer.data.db.Invoice_line
+import app.invoicer.domain.model.BusinessProfile
 import app.invoicer.domain.model.Client
 import app.invoicer.domain.model.Invoice
 import app.invoicer.domain.model.InvoiceLine
 import app.invoicer.domain.model.InvoiceStatus
 import app.invoicer.domain.model.Money
 import app.invoicer.domain.model.VatRate
+import app.invoicer.domain.repository.BusinessProfileRepository
 import app.invoicer.domain.repository.ClientRepository
 import app.invoicer.domain.repository.InvoiceRepository
 import kotlinx.coroutines.CoroutineDispatcher
@@ -42,6 +45,10 @@ class SqlClientRepository(
                 client.paymentTermDays.toLong(), nowMillis(), version,
             )
         }
+    }
+
+    override suspend fun delete(id: String) {
+        withContext(dispatcher) { q.deleteClient(id) }
     }
 }
 
@@ -115,4 +122,28 @@ class SqlInvoiceRepository(
         unitPrice = Money(unit_price_cents),
         vatRate = VatRate.entries.first { it.percent.toLong() == vat_percent },
     )
+}
+
+class SqlBusinessProfileRepository(
+    private val db: InvoicerDatabase,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
+) : BusinessProfileRepository {
+    private val q get() = db.invoicerQueries
+
+    override fun observe(): Flow<BusinessProfile> =
+        q.selectProfile().asFlow().mapToOneOrNull(dispatcher).map { row ->
+            row?.let {
+                BusinessProfile(it.name, it.address, it.kvk_number, it.btw_number, it.iban, it.default_payment_term_days.toInt())
+            } ?: BusinessProfile()
+        }
+
+    override suspend fun save(profile: BusinessProfile) = withContext(dispatcher) {
+        q.transaction {
+            val version = (q.profileVersion().executeAsOneOrNull() ?: 0L) + 1
+            q.upsertProfile(
+                profile.name, profile.address, profile.kvkNumber, profile.btwNumber, profile.iban,
+                profile.defaultPaymentTermDays.toLong(), nowMillis(), version,
+            )
+        }
+    }
 }

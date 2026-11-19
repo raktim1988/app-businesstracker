@@ -9,11 +9,13 @@ import app.invoicer.data.AppContainer
 import app.invoicer.domain.calc.DashboardCalculator
 import app.invoicer.domain.calc.DashboardSummary
 import app.invoicer.domain.model.Invoice
+import app.invoicer.domain.model.InvoiceStatus
 import app.invoicer.domain.model.Money
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import kotlin.time.Clock
@@ -23,13 +25,17 @@ data class InvoicesState(
     val summary: DashboardSummary = DashboardSummary(Money.ZERO, Money.ZERO, Money.ZERO),
 )
 
-class InvoicesViewModel(container: AppContainer) : ViewModel() {
+class InvoicesViewModel(private val container: AppContainer) : ViewModel() {
     val state: StateFlow<InvoicesState> = container.observeInvoices()
         .map { list ->
             val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
             InvoicesState(list, DashboardCalculator.summarize(list, today))
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), InvoicesState())
+
+    fun setStatus(invoice: Invoice, status: InvoiceStatus) {
+        viewModelScope.launch { container.invoiceRepository.upsert(invoice.copy(status = status)) }
+    }
 
     companion object {
         fun factory(container: AppContainer): ViewModelProvider.Factory =

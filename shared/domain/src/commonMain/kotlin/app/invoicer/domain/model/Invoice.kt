@@ -13,6 +13,7 @@ enum class InvoiceStatus { DRAFT, SENT, PAID }
 
 data class BusinessProfile(
     val name: String = "",
+    val address: String = "",
     val kvkNumber: String = "",
     val btwNumber: String = "",
     val iban: String = "",

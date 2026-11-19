@@ -16,8 +16,12 @@ class ClientsViewModel(private val container: AppContainer) : ViewModel() {
     val clients: StateFlow<List<Client>> = container.clientRepository.observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    fun add(client: Client) {
+    fun save(client: Client) {
         viewModelScope.launch { container.clientRepository.upsert(client) }
+    }
+
+    fun delete(id: String) {
+        viewModelScope.launch { container.clientRepository.delete(id) }
     }
 
     companion object {

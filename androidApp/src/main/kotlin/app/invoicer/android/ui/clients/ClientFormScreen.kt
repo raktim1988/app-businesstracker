@@ -30,12 +30,12 @@ import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
 @Composable
-fun ClientFormScreen(onSave: (Client) -> Unit, onClose: () -> Unit) {
-    var name by rememberSaveable { mutableStateOf("") }
-    var email by rememberSaveable { mutableStateOf("") }
-    var kvk by rememberSaveable { mutableStateOf("") }
-    var btw by rememberSaveable { mutableStateOf("") }
-    var term by rememberSaveable { mutableStateOf("30") }
+fun ClientFormScreen(initial: Client?, onSave: (Client) -> Unit, onClose: () -> Unit) {
+    var name by rememberSaveable { mutableStateOf(initial?.name.orEmpty()) }
+    var email by rememberSaveable { mutableStateOf(initial?.email.orEmpty()) }
+    var kvk by rememberSaveable { mutableStateOf(initial?.kvkNumber.orEmpty()) }
+    var btw by rememberSaveable { mutableStateOf(initial?.btwNumber.orEmpty()) }
+    var term by rememberSaveable { mutableStateOf((initial?.paymentTermDays ?: 30).toString()) }
     var showErrors by rememberSaveable { mutableStateOf(false) }
 
     val nameError = FieldValidation.client(name)
@@ -50,7 +50,7 @@ fun ClientFormScreen(onSave: (Client) -> Unit, onClose: () -> Unit) {
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        item { Text(stringResource(R.string.client_form_title), style = MaterialTheme.typography.headlineSmall) }
+        item { Text(stringResource(if (initial == null) R.string.client_form_title else R.string.edit_client_title), style = MaterialTheme.typography.headlineSmall) }
         item {
             ValidatedField(
                 value = name,
@@ -109,7 +109,7 @@ fun ClientFormScreen(onSave: (Client) -> Unit, onClose: () -> Unit) {
                         } else {
                             onSave(
                                 Client(
-                                    id = Uuid.random().toString(),
+                                    id = initial?.id ?: Uuid.random().toString(),
                                     name = name.trim(),
                                     email = email.trim(),
                                     kvkNumber = kvk.trim(),
@@ -120,7 +120,7 @@ fun ClientFormScreen(onSave: (Client) -> Unit, onClose: () -> Unit) {
                         }
                     },
                     modifier = Modifier.weight(1f),
-                ) { Text(stringResource(R.string.save_client)) }
+                ) { Text(stringResource(if (initial == null) R.string.save_client else R.string.save_changes)) }
             }
         }
     }

@@ -6,7 +6,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
@@ -25,9 +29,17 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import app.invoicer.android.R
 import app.invoicer.android.ui.LanguagePrefs
+import app.invoicer.android.ui.components.InfoCard
+import app.invoicer.android.ui.editor.ValidatedField
+import app.invoicer.domain.model.BusinessProfile
+import app.invoicer.domain.validation.FieldValidation
+import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.input.KeyboardType
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(profileViewModel: BusinessProfileViewModel) {
     val context = LocalContext.current
     var selected by remember { mutableStateOf(LanguagePrefs.get(context)) }
     val options = listOf(
@@ -36,11 +48,14 @@ fun SettingsScreen() {
         "nl" to R.string.language_nl,
     )
 
+    val profile by profileViewModel.profile.collectAsStateWithLifecycle()
+
     Column(
-        Modifier.fillMaxSize().padding(16.dp),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).imePadding().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineMedium)
+        profile?.let { BusinessSection(it, profileViewModel::save) }
         Text(stringResource(R.string.language), style = MaterialTheme.typography.titleMedium)
         Column(Modifier.selectableGroup()) {
             options.forEach { (code, label) ->
@@ -63,5 +78,57 @@ fun SettingsScreen() {
                 }
             }
         }
+        HorizontalDivider(Modifier.padding(vertical = 8.dp))
+        Text(stringResource(R.string.help_title), style = MaterialTheme.typography.titleMedium)
+        InfoCard(stringResource(R.string.help_kor_title), stringResource(R.string.help_kor_body))
+        InfoCard(stringResource(R.string.help_eu_title), stringResource(R.string.help_eu_body))
+        InfoCard(stringResource(R.string.help_keep_title), stringResource(R.string.help_keep_body))
+        Text(stringResource(R.string.help_disclaimer), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        HorizontalDivider(Modifier.padding(vertical = 8.dp))
+        Text(stringResource(R.string.about_title), style = MaterialTheme.typography.titleMedium)
+        val version = remember { context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty() }
+        Text(stringResource(R.string.about_version, version), style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.about_privacy), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
+}
+
+@Composable
+private fun BusinessSection(saved: BusinessProfile, onSave: (BusinessProfile) -> Unit) {
+    var name by rememberSaveable { mutableStateOf(saved.name) }
+    var address by rememberSaveable { mutableStateOf(saved.address) }
+    var kvk by rememberSaveable { mutableStateOf(saved.kvkNumber) }
+    var btw by rememberSaveable { mutableStateOf(saved.btwNumber) }
+    var iban by rememberSaveable { mutableStateOf(saved.iban) }
+    var showErrors by rememberSaveable { mutableStateOf(false) }
+    var justSaved by rememberSaveable { mutableStateOf(false) }
+
+    // Name is optional here so the app stays usable before setup; the PDF falls back to a blank header.
+    val nameError = FieldValidation.client(name).takeIf { name.isNotBlank() }
+    val kvkError = FieldValidation.kvk(kvk)
+    val btwError = FieldValidation.btw(btw)
+    val ibanError = FieldValidation.iban(iban)
+    val valid = listOf(nameError, kvkError, btwError, ibanError).all { it == null }
+
+    Text(stringResource(R.string.business_title), style = MaterialTheme.typography.titleMedium)
+    Text(stringResource(R.string.business_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    ValidatedField(name, { name = it.filter(FieldValidation::isClientChar).take(80); justSaved = false }, stringResource(R.string.field_business_name), nameError, Modifier.fillMaxWidth())
+    ValidatedField(address, { address = it.replace('\n', ' ').take(120); justSaved = false }, stringResource(R.string.field_address), null, Modifier.fillMaxWidth())
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        ValidatedField(kvk, { kvk = it.filter(Char::isDigit).take(8); justSaved = false }, stringResource(R.string.label_kvk), kvkError.takeIf { showErrors }, Modifier.weight(1f), keyboardType = KeyboardType.Number)
+        ValidatedField(btw, { btw = it.filter(Char::isLetterOrDigit).uppercase().take(14); justSaved = false }, stringResource(R.string.label_btw), btwError.takeIf { showErrors }, Modifier.weight(1.4f))
+    }
+    ValidatedField(iban, { iban = it.filter { c -> c.isLetterOrDigit() || c == ' ' }.uppercase().take(42); justSaved = false }, stringResource(R.string.field_iban), ibanError.takeIf { showErrors }, Modifier.fillMaxWidth())
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Button(onClick = {
+            if (!valid) {
+                showErrors = true
+            } else {
+                onSave(saved.copy(name = name.trim(), address = address.trim(), kvkNumber = kvk, btwNumber = btw, iban = iban.trim()))
+                justSaved = true
+                showErrors = false
+            }
+        }) { Text(stringResource(R.string.save_business)) }
+        if (justSaved) Text(stringResource(R.string.saved), color = MaterialTheme.colorScheme.primary)
+    }
+    HorizontalDivider(Modifier.padding(vertical = 8.dp))
 }

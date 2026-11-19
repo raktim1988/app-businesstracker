@@ -16,7 +16,7 @@ enum class FieldError {
     DescriptionRequired, DescriptionTooLong,
     QuantityRequired, QuantityFormat, QuantityNotPositive, QuantityTooLarge,
     RateRequired, RateFormat, RateNotPositive, RateTooLarge,
-    EmailInvalid, KvkInvalid, BtwInvalid, PaymentTermInvalid,
+    EmailInvalid, KvkInvalid, BtwInvalid, IbanInvalid, PaymentTermInvalid,
 }
 
 /** Field rules shared by all platforms. Each returns an error code or null when valid. */
@@ -75,6 +75,19 @@ object FieldValidation {
     /** Optional: blank is fine; format NL123456789B01. */
     fun btw(value: String): FieldError? =
         if (value.isBlank() || btwRegex.matches(value.trim().uppercase())) null else FieldError.BtwInvalid
+
+    /** Optional: blank is fine; checks length and the ISO 7064 mod-97 checksum (spaces ignored). */
+    fun iban(value: String): FieldError? {
+        val iban = value.filterNot(Char::isWhitespace).uppercase()
+        if (iban.isEmpty()) return null
+        if (iban.length !in 15..34 || !iban.all(Char::isLetterOrDigit) || !iban[0].isLetter() || !iban[1].isLetter()) return FieldError.IbanInvalid
+        var remainder = 0
+        for (c in iban.drop(4) + iban.take(4)) {
+            val digits = if (c.isDigit()) c.toString() else (c - 'A' + 10).toString()
+            for (d in digits) remainder = (remainder * 10 + (d - '0')) % 97
+        }
+        return if (remainder == 1) null else FieldError.IbanInvalid
+    }
 
     fun paymentTermDays(value: String): FieldError? {
         val days = value.trim().toIntOrNull()

@@ -1,6 +1,7 @@
 package app.invoicer.android
 
 import app.invoicer.data.AppContainer
+import app.invoicer.domain.model.BusinessProfile
 import app.invoicer.domain.model.Client
 import app.invoicer.domain.model.Invoice
 import app.invoicer.domain.model.InvoiceLine
@@ -27,6 +28,9 @@ object DemoData {
 
     suspend fun seed(container: AppContainer) {
         if (container.clientRepository.observeAll().first().isNotEmpty()) return
+        container.profileRepository.save(
+            BusinessProfile("Studio Voorbeeld", "Keizersgracht 100, 1015 AA Amsterdam", "87654321", "NL123456782B01", "NL91 ABNA 0417 1643 00", 30),
+        )
         clients.forEach { container.clientRepository.upsert(it) }
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
         data class Sample(val client: Int, val daysAgo: Int, val status: InvoiceStatus, val lines: List<InvoiceLine>)

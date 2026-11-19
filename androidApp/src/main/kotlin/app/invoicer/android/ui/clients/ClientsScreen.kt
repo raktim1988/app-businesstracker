@@ -1,6 +1,7 @@
 package app.invoicer.android.ui.clients
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.People
+import app.invoicer.android.ui.components.EmptyState
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -34,7 +37,7 @@ import app.invoicer.android.R
 import app.invoicer.domain.model.Client
 
 @Composable
-fun ClientsScreen(viewModel: ClientsViewModel, onNewClient: () -> Unit) {
+fun ClientsScreen(viewModel: ClientsViewModel, onOpenClient: (Client) -> Unit, onNewClient: () -> Unit) {
     val clients by viewModel.clients.collectAsStateWithLifecycle()
     val fabLabel = stringResource(R.string.new_client_fab)
     Box(Modifier.fillMaxSize()) {
@@ -45,10 +48,10 @@ fun ClientsScreen(viewModel: ClientsViewModel, onNewClient: () -> Unit) {
             item { Text(stringResource(R.string.clients_title), style = MaterialTheme.typography.headlineMedium) }
             if (clients.isEmpty()) {
                 item {
-                    Text(stringResource(R.string.no_clients), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    EmptyState(Icons.Filled.People, stringResource(R.string.empty_clients_title), stringResource(R.string.empty_clients_body))
                 }
             } else {
-                items(clients, key = { it.id }) { ClientCard(it) }
+                items(clients, key = { it.id }) { ClientCard(it, Modifier.clickable { onOpenClient(it) }) }
             }
         }
         ExtendedFloatingActionButton(
@@ -61,8 +64,8 @@ fun ClientsScreen(viewModel: ClientsViewModel, onNewClient: () -> Unit) {
 }
 
 @Composable
-private fun ClientCard(client: Client) {
-    Card(Modifier.fillMaxWidth()) {
+private fun ClientCard(client: Client, modifier: Modifier = Modifier) {
+    Card(modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier.size(40.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape),

@@ -36,6 +36,7 @@ CREATE TABLE invoice_line (
 CREATE TABLE business_profile (
     id INTEGER NOT NULL PRIMARY KEY CHECK (id = 1),
     name TEXT NOT NULL,
+    address TEXT NOT NULL,
     kvk_number TEXT NOT NULL,
     btw_number TEXT NOT NULL,
     iban TEXT NOT NULL,
@@ -53,6 +54,9 @@ SELECT version FROM client WHERE id = ?;
 upsertClient:
 INSERT OR REPLACE INTO client(id, name, email, kvk_number, btw_number, payment_term_days, updated_at, version)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteClient:
+DELETE FROM client WHERE id = ?;
 
 selectInvoices:
 SELECT * FROM invoice ORDER BY number DESC;
@@ -87,5 +91,8 @@ selectProfile:
 SELECT * FROM business_profile WHERE id = 1;
 
 upsertProfile:
-INSERT OR REPLACE INTO business_profile(id, name, kvk_number, btw_number, iban, default_payment_term_days, updated_at, version)
-VALUES (1, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO business_profile(id, name, address, kvk_number, btw_number, iban, default_payment_term_days, updated_at, version)
+VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?);
+
+profileVersion:
+SELECT version FROM business_profile WHERE id = 1;

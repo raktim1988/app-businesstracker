@@ -3,6 +3,7 @@ package app.invoicer.android.ui.invoices
 import app.invoicer.android.ui.labelRes
 import androidx.compose.ui.res.stringResource
 import app.invoicer.android.R
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Receipt
+import app.invoicer.android.ui.components.EmptyState
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.ui.semantics.contentDescription
@@ -32,14 +35,14 @@ import app.invoicer.domain.calc.InvoiceCalculator
 import app.invoicer.domain.model.Invoice
 
 @Composable
-fun InvoiceListScreen(viewModel: InvoicesViewModel, onNewInvoice: () -> Unit) {
+fun InvoiceListScreen(viewModel: InvoicesViewModel, onOpenInvoice: (Invoice) -> Unit, onNewInvoice: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val fabLabel = stringResource(R.string.new_invoice_fab)
     Box(Modifier.fillMaxSize()) {
         if (state.invoices.isEmpty()) {
             Column(Modifier.padding(16.dp)) {
                 Text(stringResource(R.string.invoices_title), style = MaterialTheme.typography.headlineMedium)
-                Text(stringResource(R.string.no_invoices), Modifier.padding(top = 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                EmptyState(Icons.Filled.Receipt, stringResource(R.string.empty_invoices_title), stringResource(R.string.empty_invoices_body))
             }
         } else {
             LazyColumn(
@@ -47,7 +50,7 @@ fun InvoiceListScreen(viewModel: InvoicesViewModel, onNewInvoice: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item { Text(stringResource(R.string.invoices_title), style = MaterialTheme.typography.headlineMedium) }
-                items(state.invoices, key = { it.id }) { InvoiceRow(it) }
+                items(state.invoices, key = { it.id }) { InvoiceRow(it, Modifier.clickable { onOpenInvoice(it) }) }
             }
         }
         ExtendedFloatingActionButton(
@@ -60,8 +63,8 @@ fun InvoiceListScreen(viewModel: InvoicesViewModel, onNewInvoice: () -> Unit) {
 }
 
 @Composable
-fun InvoiceRow(invoice: Invoice) {
-    Card(Modifier.fillMaxWidth()) {
+fun InvoiceRow(invoice: Invoice, modifier: Modifier = Modifier) {
+    Card(modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(1f)) {
                 Text(invoice.clientName, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)

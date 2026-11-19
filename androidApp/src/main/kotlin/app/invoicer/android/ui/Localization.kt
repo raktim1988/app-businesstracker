@@ -25,6 +25,7 @@ fun FieldError.messageRes(): Int = when (this) {
     FieldError.EmailInvalid -> R.string.err_email
     FieldError.KvkInvalid -> R.string.err_kvk
     FieldError.BtwInvalid -> R.string.err_btw
+    FieldError.IbanInvalid -> R.string.err_iban
     FieldError.PaymentTermInvalid -> R.string.err_term
 }
 

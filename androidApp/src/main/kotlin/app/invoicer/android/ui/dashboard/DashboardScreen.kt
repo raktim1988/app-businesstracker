@@ -2,6 +2,7 @@ package app.invoicer.android.ui.dashboard
 
 import androidx.compose.ui.res.stringResource
 import app.invoicer.android.R
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -32,6 +33,7 @@ import app.invoicer.android.ui.editor.LineFields
 import app.invoicer.android.ui.editor.TotalsBlock
 import app.invoicer.android.ui.invoices.InvoiceRow
 import app.invoicer.android.ui.invoices.InvoicesViewModel
+import app.invoicer.domain.model.Invoice
 import app.invoicer.domain.model.Money
 
 @Composable
@@ -39,6 +41,7 @@ fun DashboardScreen(
     invoicesViewModel: InvoicesViewModel,
     editorViewModel: EditorViewModel,
     onOpenInvoices: () -> Unit,
+    onOpenInvoice: (Invoice) -> Unit,
     onOpenEditor: () -> Unit,
 ) {
     val invoices by invoicesViewModel.state.collectAsStateWithLifecycle()
@@ -99,7 +102,7 @@ fun DashboardScreen(
         if (invoices.invoices.isEmpty()) {
             item { GettingStartedCard() }
         } else {
-            items(invoices.invoices.take(3), key = { it.id }) { InvoiceRow(it) }
+            items(invoices.invoices.take(3), key = { it.id }) { InvoiceRow(it, Modifier.clickable { onOpenInvoice(it) }) }
         }
         item { Text(stringResource(R.string.good_to_know), style = MaterialTheme.typography.titleMedium) }
         items(TIPS) { TipCard(stringResource(it.first), stringResource(it.second)) }

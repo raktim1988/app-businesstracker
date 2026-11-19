@@ -52,4 +52,12 @@ class FieldValidationTest {
         assertEquals(FieldError.PaymentTermInvalid, FieldValidation.paymentTermDays("0"))
         assertEquals(FieldError.PaymentTermInvalid, FieldValidation.paymentTermDays("abc"))
     }
+
+    @Test
+    fun ibanChecksum() {
+        assertNull(FieldValidation.iban(""))
+        assertNull(FieldValidation.iban("NL91 ABNA 0417 1643 00"))
+        assertEquals(FieldError.IbanInvalid, FieldValidation.iban("NL91ABNA0417164301"))
+        assertEquals(FieldError.IbanInvalid, FieldValidation.iban("12345"))
+    }
 }

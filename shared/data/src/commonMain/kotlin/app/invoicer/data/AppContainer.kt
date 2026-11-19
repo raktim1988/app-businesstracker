@@ -1,6 +1,7 @@
 package app.invoicer.data
 
 import app.invoicer.data.db.InvoicerDatabase
+import app.invoicer.domain.repository.BusinessProfileRepository
 import app.invoicer.domain.repository.ClientRepository
 import app.invoicer.domain.repository.InvoiceRepository
 import app.invoicer.domain.usecase.ObserveInvoicesUseCase
@@ -12,8 +13,9 @@ import app.invoicer.domain.usecase.SaveInvoiceUseCaseImpl
 class AppContainer(
     val invoiceRepository: InvoiceRepository,
     val clientRepository: ClientRepository,
+    val profileRepository: BusinessProfileRepository,
 ) {
-    constructor(db: InvoicerDatabase) : this(SqlInvoiceRepository(db), SqlClientRepository(db))
+    constructor(db: InvoicerDatabase) : this(SqlInvoiceRepository(db), SqlClientRepository(db), SqlBusinessProfileRepository(db))
 
     val observeInvoices: ObserveInvoicesUseCase = ObserveInvoicesUseCaseImpl(invoiceRepository)
     val saveInvoice: SaveInvoiceUseCase = SaveInvoiceUseCaseImpl(invoiceRepository)

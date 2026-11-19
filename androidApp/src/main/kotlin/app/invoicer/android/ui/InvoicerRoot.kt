@@ -35,11 +35,33 @@ import app.invoicer.android.ui.editor.EditorScreen
 import app.invoicer.android.ui.editor.EditorViewModel
 import app.invoicer.android.ui.invoices.InvoiceListScreen
 import app.invoicer.android.ui.invoices.InvoicesViewModel
-import app.invoicer.android.ui.placeholder.PlaceholderScreen
+import android.widget.Toast
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import app.invoicer.android.pdf.InvoicePdf
+import app.invoicer.android.ui.clients.ClientDetailScreen
+import app.invoicer.android.ui.invoices.InvoiceDetailScreen
+import app.invoicer.android.ui.settings.BusinessProfileViewModel
+import app.invoicer.domain.calc.ClientCalculator
+import app.invoicer.domain.calc.belongsTo
+import app.invoicer.domain.model.BusinessProfile
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
 import app.invoicer.data.AppContainer
 
 private const val EDITOR = "editor"
-private const val CLIENT_FORM = "client_form"
+private const val CLIENT_FORM = "client_form?id={id}"
+private const val INVOICE = "invoice/{id}"
+private const val CLIENT = "client/{id}"
+private fun clientForm(id: String? = null) = if (id == null) "client_form" else "client_form?id=$id"
 
 private enum class Tab(val route: String, @StringRes val label: Int, val icon: ImageVector) {
     Home("home", R.string.tab_home, Icons.Filled.Home),
@@ -56,7 +78,7 @@ fun InvoicerRoot(container: AppContainer) {
 
     Scaffold(
         bottomBar = {
-            if (currentRoute != EDITOR && currentRoute != CLIENT_FORM) {
+            if (Tab.entries.any { it.route == currentRoute }) {
                 NavigationBar {
                     Tab.entries.forEach { tab ->
                         NavigationBarItem(
@@ -78,6 +100,9 @@ fun InvoicerRoot(container: AppContainer) {
     ) { padding ->
         val invoicesVm: InvoicesViewModel = viewModel(factory = InvoicesViewModel.factory(container))
         val clientsVm: ClientsViewModel = viewModel(factory = ClientsViewModel.factory(container))
+        val profileVm: BusinessProfileViewModel = viewModel(factory = BusinessProfileViewModel.factory(container))
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
         NavHost(navController, startDestination = Tab.Home.route, modifier = Modifier.padding(padding).consumeWindowInsets(padding)) {
             composable(Tab.Home.route) {
                 val homeEditorVm: EditorViewModel = viewModel(factory = EditorViewModel.factory(container))
@@ -85,22 +110,88 @@ fun InvoicerRoot(container: AppContainer) {
                     invoicesViewModel = invoicesVm,
                     editorViewModel = homeEditorVm,
                     onOpenInvoices = { navController.navigate(Tab.Invoices.route) },
+                    onOpenInvoice = { navController.navigate("invoice/${it.id}") },
                     onOpenEditor = { navController.navigate(EDITOR) },
                 )
             }
             composable(Tab.Invoices.route) {
-                InvoiceListScreen(invoicesVm) { navController.navigate(EDITOR) }
+                InvoiceListScreen(invoicesVm, onOpenInvoice = { navController.navigate("invoice/${it.id}") }) { navController.navigate(EDITOR) }
             }
             composable(Tab.Clients.route) {
-                ClientsScreen(clientsVm) { navController.navigate(CLIENT_FORM) }
+                ClientsScreen(clientsVm, onOpenClient = { navController.navigate("client/${it.id}") }) { navController.navigate(clientForm()) }
             }
-            composable(CLIENT_FORM) {
-                ClientFormScreen(
-                    onSave = { clientsVm.add(it); navController.popBackStack() },
-                    onClose = { navController.popBackStack() },
-                )
+            composable(
+                CLIENT_FORM,
+                arguments = listOf(navArgument("id") { type = NavType.StringType; nullable = true; defaultValue = null }),
+            ) { entry ->
+                val editId = entry.arguments?.getString("id")
+                val clients by clientsVm.clients.collectAsStateWithLifecycle()
+                val initial = clients.firstOrNull { it.id == editId }
+                if (editId == null || initial != null) {
+                    ClientFormScreen(
+                        initial = initial,
+                        onSave = { clientsVm.save(it); navController.popBackStack() },
+                        onClose = { navController.popBackStack() },
+                    )
+                }
             }
-            composable(Tab.Settings.route) { SettingsScreen() }
+            composable(INVOICE, arguments = listOf(navArgument("id") { type = NavType.StringType })) { entry ->
+                val id = entry.arguments?.getString("id")
+                val state by invoicesVm.state.collectAsStateWithLifecycle()
+                val clients by clientsVm.clients.collectAsStateWithLifecycle()
+                val profile by profileVm.profile.collectAsStateWithLifecycle()
+                val invoice = state.invoices.firstOrNull { it.id == id }
+                if (invoice != null) {
+                    val client = clients.firstOrNull { invoice.belongsTo(it) }
+                    InvoiceDetailScreen(
+                        invoice = invoice,
+                        onBack = { navController.popBackStack() },
+                        onOpenClient = client?.let { c -> { navController.navigate("client/${c.id}") } },
+                        onSetStatus = { invoicesVm.setStatus(invoice, it) },
+                        onSharePdf = {
+                            scope.launch {
+                                val business = profile ?: BusinessProfile()
+                                runCatching {
+                                    withContext(Dispatchers.IO) { InvoicePdf.create(context, invoice, client, business) }
+                                }.onSuccess { file ->
+                                    context.startActivity(InvoicePdf.shareIntent(context, file, invoice, client, business))
+                                }.onFailure {
+                                    Toast.makeText(context, R.string.pdf_error, Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        },
+                    )
+                }
+            }
+            composable(CLIENT, arguments = listOf(navArgument("id") { type = NavType.StringType })) { entry ->
+                val id = entry.arguments?.getString("id")
+                val clients by clientsVm.clients.collectAsStateWithLifecycle()
+                val state by invoicesVm.state.collectAsStateWithLifecycle()
+                val client = clients.firstOrNull { it.id == id }
+                if (client != null) {
+                    val theirs = state.invoices.filter { it.belongsTo(client) }
+                    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                    ClientDetailScreen(
+                        client = client,
+                        invoices = theirs,
+                        summary = ClientCalculator.summarize(theirs, today),
+                        onBack = { navController.popBackStack() },
+                        onEdit = { navController.navigate(clientForm(client.id)) },
+                        onDelete = { clientsVm.delete(client.id); navController.popBackStack() },
+                        onNewInvoice = {
+                            val homeEditor: EditorViewModel = ViewModelProvider(
+                                navController.getBackStackEntry(Tab.Home.route),
+                                EditorViewModel.factory(container),
+                            )[EditorViewModel::class.java]
+                            homeEditor.reset()
+                            homeEditor.pickClient(client)
+                            navController.navigate(EDITOR)
+                        },
+                        onOpenInvoice = { navController.navigate("invoice/${it.id}") },
+                    )
+                }
+            }
+            composable(Tab.Settings.route) { SettingsScreen(profileVm) }
             composable(EDITOR) {
                 // Shares the Home draft so "More lines…" keeps what was typed
                 val homeEntry = remember(it) { navController.getBackStackEntry(Tab.Home.route) }
