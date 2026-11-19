@@ -167,4 +167,19 @@
     <string name="business_edit">Bewerken</string>
     <string name="business_collapse">Inklappen</string>
     <string name="business_not_set">Nog geen bedrijfsgegevens. Tik op Bewerken om ze toe te voegen.</string>
+    <string name="account_title">Account</string>
+    <string name="account_not_configured">Cloud-synchronisatie is niet ingesteld in deze versie.</string>
+    <string name="account_hint">Optioneel. Log in om je gegevens te back-uppen en te synchroniseren tussen apparaten. De app werkt volledig zonder account.</string>
+    <string name="account_email">E-mail</string>
+    <string name="account_password">Wachtwoord</string>
+    <string name="account_sign_in">Inloggen</string>
+    <string name="account_create">Account aanmaken</string>
+    <string name="account_sign_out">Uitloggen</string>
+    <string name="account_signed_in">Ingelogd als</string>
+    <string name="account_error_email">Vul een geldig e-mailadres in.</string>
+    <string name="account_error_password">Gebruik minstens 6 tekens.</string>
+    <string name="account_error_credentials">Onjuist e-mailadres of wachtwoord.</string>
+    <string name="account_error_exists">Dit e-mailadres heeft al een account. Probeer in te loggen.</string>
+    <string name="account_error_network">Geen verbinding. Controleer je internet en probeer opnieuw.</string>
+    <string name="account_error_generic">Er ging iets mis. Probeer het opnieuw.</string>
 </resources>

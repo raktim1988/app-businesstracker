@@ -167,4 +167,19 @@
     <string name="business_edit">Edit</string>
     <string name="business_collapse">Collapse</string>
     <string name="business_not_set">No business details yet. Tap Edit to add them.</string>
+    <string name="account_title">Account</string>
+    <string name="account_not_configured">Cloud sync is not set up in this build.</string>
+    <string name="account_hint">Optional. Sign in to back up and sync your data across devices. The app works fully without an account.</string>
+    <string name="account_email">Email</string>
+    <string name="account_password">Password</string>
+    <string name="account_sign_in">Sign in</string>
+    <string name="account_create">Create account</string>
+    <string name="account_sign_out">Sign out</string>
+    <string name="account_signed_in">Signed in as</string>
+    <string name="account_error_email">Enter a valid email address.</string>
+    <string name="account_error_password">Use at least 6 characters.</string>
+    <string name="account_error_credentials">Wrong email or password.</string>
+    <string name="account_error_exists">This email already has an account. Try signing in.</string>
+    <string name="account_error_network">No connection. Check your internet and try again.</string>
+    <string name="account_error_generic">Something went wrong. Please try again.</string>
 </resources>

@@ -62,6 +62,8 @@ fun SettingsScreen(profileViewModel: BusinessProfileViewModel) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineMedium)
+        AccountSection()
+        HorizontalDivider(Modifier.padding(vertical = 8.dp))
         profile?.let { BusinessSection(it, profileViewModel::save) }
         LockSection()
         HorizontalDivider(Modifier.padding(vertical = 8.dp))
