@@ -160,4 +160,11 @@
     <string name="ok">OK</string>
     <string name="save_pdf">PDF opslaan</string>
     <string name="pdf_saved">PDF opgeslagen</string>
+    <string name="theme">Thema</string>
+    <string name="theme_system">Systeemstandaard</string>
+    <string name="theme_light">Licht</string>
+    <string name="theme_dark">Donker</string>
+    <string name="business_edit">Bewerken</string>
+    <string name="business_collapse">Inklappen</string>
+    <string name="business_not_set">Nog geen bedrijfsgegevens. Tik op Bewerken om ze toe te voegen.</string>
 </resources>

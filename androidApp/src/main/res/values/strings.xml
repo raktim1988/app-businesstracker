@@ -160,4 +160,11 @@
     <string name="ok">OK</string>
     <string name="save_pdf">Save PDF</string>
     <string name="pdf_saved">PDF saved</string>
+    <string name="theme">Theme</string>
+    <string name="theme_system">System default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="business_edit">Edit</string>
+    <string name="business_collapse">Collapse</string>
+    <string name="business_not_set">No business details yet. Tap Edit to add them.</string>
 </resources>

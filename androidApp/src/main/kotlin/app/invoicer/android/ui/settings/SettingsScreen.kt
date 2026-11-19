@@ -37,6 +37,9 @@ import app.invoicer.android.ui.editor.ValidatedField
 import app.invoicer.domain.model.BusinessProfile
 import app.invoicer.domain.validation.FieldValidation
 import androidx.compose.material3.Button
+import androidx.compose.material3.TextButton
+import app.invoicer.android.ui.ThemeMode
+import app.invoicer.android.ui.ThemePrefs
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.input.KeyboardType
@@ -60,6 +63,8 @@ fun SettingsScreen(profileViewModel: BusinessProfileViewModel) {
         Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineMedium)
         profile?.let { BusinessSection(it, profileViewModel::save) }
         LockSection()
+        HorizontalDivider(Modifier.padding(vertical = 8.dp))
+        ThemeSection()
         HorizontalDivider(Modifier.padding(vertical = 8.dp))
         Text(stringResource(R.string.language), style = MaterialTheme.typography.titleMedium)
         Column(Modifier.selectableGroup()) {
@@ -106,6 +111,8 @@ private fun BusinessSection(saved: BusinessProfile, onSave: (BusinessProfile) ->
     var iban by rememberSaveable { mutableStateOf(saved.iban) }
     var showErrors by rememberSaveable { mutableStateOf(false) }
     var justSaved by rememberSaveable { mutableStateOf(false) }
+    // Collapsed once a profile has been saved; open on first use so setup is obvious.
+    var expanded by rememberSaveable { mutableStateOf(saved.name.isBlank() && saved.address.isBlank()) }
 
     // Name is optional here so the app stays usable before setup; the PDF falls back to a blank header.
     val nameError = FieldValidation.client(name).takeIf { name.isNotBlank() }
@@ -114,7 +121,25 @@ private fun BusinessSection(saved: BusinessProfile, onSave: (BusinessProfile) ->
     val ibanError = FieldValidation.iban(iban)
     val valid = listOf(nameError, kvkError, btwError, ibanError).all { it == null }
 
-    Text(stringResource(R.string.business_title), style = MaterialTheme.typography.titleMedium)
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(R.string.business_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+        if (justSaved && !expanded) Text(stringResource(R.string.saved), color = MaterialTheme.colorScheme.primary)
+        TextButton(onClick = { expanded = !expanded }) {
+            Text(stringResource(if (expanded) R.string.business_collapse else R.string.business_edit))
+        }
+    }
+    if (!expanded) {
+        val lines = listOf(
+            saved.name, saved.address,
+            listOf(saved.kvkNumber, saved.btwNumber).filter { it.isNotBlank() }.joinToString(" · "),
+            saved.iban,
+        ).filter { it.isNotBlank() }
+        if (lines.isEmpty()) {
+            Text(stringResource(R.string.business_not_set), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            InfoCard(saved.name.ifBlank { stringResource(R.string.business_title) }, lines.drop(if (saved.name.isNotBlank()) 1 else 0).joinToString("\n"))
+        }
+    } else {
     Text(stringResource(R.string.business_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     ValidatedField(name, { name = it.filter(FieldValidation::isClientChar).take(80); justSaved = false }, stringResource(R.string.field_business_name), nameError, Modifier.fillMaxWidth())
     ValidatedField(address, { address = it.replace('\n', ' ').take(120); justSaved = false }, stringResource(R.string.field_address), null, Modifier.fillMaxWidth())
@@ -131,9 +156,11 @@ private fun BusinessSection(saved: BusinessProfile, onSave: (BusinessProfile) ->
                 onSave(saved.copy(name = name.trim(), address = address.trim(), kvkNumber = kvk, btwNumber = btw, iban = iban.trim()))
                 justSaved = true
                 showErrors = false
+                expanded = false
             }
         }) { Text(stringResource(R.string.save_business)) }
         if (justSaved) Text(stringResource(R.string.saved), color = MaterialTheme.colorScheme.primary)
+    }
     }
     HorizontalDivider(Modifier.padding(vertical = 8.dp))
 }
@@ -173,5 +200,38 @@ private fun LockSection() {
                 }
             },
         )
+    }
+}
+
+@Composable
+private fun ThemeSection() {
+    val context = LocalContext.current
+    var selected by remember { mutableStateOf(ThemePrefs.get(context)) }
+    val options = listOf(
+        ThemeMode.SYSTEM to R.string.theme_system,
+        ThemeMode.LIGHT to R.string.theme_light,
+        ThemeMode.DARK to R.string.theme_dark,
+    )
+    Text(stringResource(R.string.theme), style = MaterialTheme.typography.titleMedium)
+    Column(Modifier.selectableGroup()) {
+        options.forEach { (mode, label) ->
+            Row(
+                Modifier.fillMaxWidth().selectable(
+                    selected = selected == mode,
+                    role = Role.RadioButton,
+                    onClick = {
+                        if (selected != mode) {
+                            selected = mode
+                            ThemePrefs.set(context, mode)
+                            (context as? Activity)?.recreate()
+                        }
+                    },
+                ).padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RadioButton(selected = selected == mode, onClick = null)
+                Text(stringResource(label), Modifier.padding(start = 12.dp))
+            }
+        }
     }
 }

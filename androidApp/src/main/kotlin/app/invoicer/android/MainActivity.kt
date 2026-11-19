@@ -2,6 +2,7 @@ package app.invoicer.android
 
 import app.invoicer.android.ui.LanguagePrefs
 import android.content.Context
+import android.graphics.Color as AndroidColor
 import android.os.Bundle
 import android.os.SystemClock
 import androidx.fragment.app.FragmentActivity
@@ -17,6 +18,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.activity.SystemBarStyle
+import app.invoicer.android.ui.ThemeMode
+import app.invoicer.android.ui.ThemePrefs
 import app.invoicer.android.ui.InvoicerRoot
 
 class MainActivity : FragmentActivity() {
@@ -27,11 +33,22 @@ class MainActivity : FragmentActivity() {
     override fun attachBaseContext(newBase: Context) = super.attachBaseContext(LanguagePrefs.wrap(newBase))
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
+        val themeMode = ThemePrefs.get(this)
+        when (themeMode) {
+            ThemeMode.SYSTEM -> enableEdgeToEdge()
+            ThemeMode.LIGHT -> enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.light(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT),
+                navigationBarStyle = SystemBarStyle.light(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT),
+            )
+            ThemeMode.DARK -> enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT),
+                navigationBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT),
+            )
+        }
         super.onCreate(savedInstanceState)
         val container = (application as InvoicerApp).container
         setContent {
-            InvoicerTheme {
+            InvoicerTheme(themeMode) {
                 InvoicerRoot(container)
                 if (locked) {
                     LockScreen(onUnlock = ::promptUnlock)
@@ -70,9 +87,15 @@ class MainActivity : FragmentActivity() {
 }
 
 @Composable
-private fun InvoicerTheme(content: @Composable () -> Unit) {
+private fun InvoicerTheme(mode: ThemeMode, content: @Composable () -> Unit) {
+    val dark = when (mode) {
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+    }
     MaterialTheme(
-        colorScheme = lightColorScheme(primary = Color(0xFF0B5FFF)),
+        colorScheme = if (dark) darkColorScheme(primary = Color(0xFF9DB8FF), onPrimary = Color(0xFF002A78))
+        else lightColorScheme(primary = Color(0xFF0B5FFF)),
         content = content,
     )
 }
