@@ -37,6 +37,7 @@ import app.invoicer.android.ui.editor.ValidatedField
 import app.invoicer.domain.model.BusinessProfile
 import app.invoicer.domain.validation.FieldValidation
 import androidx.compose.material3.Button
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.material3.TextButton
 import app.invoicer.android.ui.ThemeMode
 import app.invoicer.android.ui.ThemePrefs
@@ -168,7 +169,12 @@ private fun BusinessSection(saved: BusinessProfile, onSave: (BusinessProfile) ->
 @Composable
 private fun LockSection() {
     val context = LocalContext.current
-    val available = remember { AppLock.isAvailable(context) }
+    var available by remember { mutableStateOf(AppLock.isAvailable(context)) }
+    // Re-check on resume so setting a screen lock in system settings takes effect without a restart.
+    LifecycleResumeEffect(Unit) {
+        available = AppLock.isAvailable(context)
+        onPauseOrDispose {}
+    }
     var enabled by remember { mutableStateOf(AppLock.isEnabled(context) && available) }
     val prompt = stringResource(R.string.lock_enable_prompt)
 
