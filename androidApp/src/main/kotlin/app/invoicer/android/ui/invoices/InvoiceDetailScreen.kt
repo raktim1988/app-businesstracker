@@ -57,6 +57,7 @@ fun InvoiceDetailScreen(
     onSharePdf: () -> Unit,
     onSavePdf: () -> Unit,
     onDelete: () -> Unit,
+    onEdit: () -> Unit,
 ) {
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
@@ -117,6 +118,9 @@ fun InvoiceDetailScreen(
                 }
             }
             if (invoice.status == InvoiceStatus.DRAFT) {
+                OutlinedButton(onClick = onEdit, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                    Text(stringResource(R.string.edit_draft))
+                }
                 TextButton(onClick = { confirmDelete = true }, modifier = Modifier.padding(top = 4.dp)) {
                     Text(stringResource(R.string.delete_invoice), color = MaterialTheme.colorScheme.error)
                 }

@@ -54,6 +54,8 @@ data class EditorState(
     val totals: InvoiceTotals = InvoiceCalculator.totals(emptyList()),
     val showErrors: Boolean = false,
     val saved: Boolean = false,
+    val editingId: String? = null,
+    val editingNumber: String? = null,
 ) {
     val dueDate get() = issueDate.plus(DatePeriod(days = paymentTermDays))
     val clientError get() = FieldValidation.client(clientName)
@@ -95,6 +97,28 @@ class EditorViewModel(private val container: AppContainer) : ViewModel() {
 
     fun reset() = _state.update { EditorState() }
 
+    fun loadDraft(invoice: Invoice) {
+        _state.value = EditorState(
+            clientName = invoice.clientName,
+            clientId = invoice.clientId,
+            paymentTermDays = (invoice.dueDate.toEpochDays() - invoice.issueDate.toEpochDays()).toInt(),
+            issueDate = invoice.issueDate,
+            lines = invoice.lines.map {
+                LineInput(it.description, plainQuantity(it.quantityMilli), plainAmount(it.unitPrice.cents), it.vatRate)
+            },
+            totals = InvoiceCalculator.totals(invoice.lines),
+            editingId = invoice.id,
+            editingNumber = invoice.number,
+        )
+    }
+
+    private fun plainQuantity(milli: Long): String {
+        val fraction = (milli % 1000).toString().padStart(3, '0').trimEnd('0')
+        return if (fraction.isEmpty()) (milli / 1000).toString() else "${milli / 1000}.$fraction"
+    }
+
+    private fun plainAmount(cents: Long) = "${cents / 100}.${(cents % 100).toString().padStart(2, '0')}"
+
     @OptIn(ExperimentalUuidApi::class)
     fun save() {
         val s = _state.value
@@ -104,8 +128,8 @@ class EditorViewModel(private val container: AppContainer) : ViewModel() {
         }
         viewModelScope.launch {
             val invoice = Invoice(
-                id = Uuid.random().toString(),
-                number = container.invoiceRepository.nextNumber(s.issueDate.year),
+                id = s.editingId ?: Uuid.random().toString(),
+                number = s.editingNumber ?: container.invoiceRepository.nextNumber(s.issueDate.year),
                 clientId = s.clientId,
                 clientName = s.clientName.trim(),
                 issueDate = s.issueDate,
@@ -113,7 +137,7 @@ class EditorViewModel(private val container: AppContainer) : ViewModel() {
                 lines = s.lines.mapNotNull(::toDomain),
             )
             val error = container.saveInvoice(invoice)
-            if (error == null) _justCreated.value = CreatedInvoice(invoice.id, invoice.number)
+            if (error == null && s.editingId == null) _justCreated.value = CreatedInvoice(invoice.id, invoice.number)
             _state.update { it.copy(showErrors = error != null, saved = error == null) }
         }
     }

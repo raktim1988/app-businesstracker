@@ -37,8 +37,8 @@ class InvoicesViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch { container.invoiceRepository.upsert(invoice.copy(status = status)) }
     }
 
-    fun deleteDraft(id: String) {
-        viewModelScope.launch { container.invoiceRepository.deleteDraft(id) }
+    fun deleteDrafts(ids: List<String>) {
+        viewModelScope.launch { ids.forEach { container.invoiceRepository.deleteDraft(it) } }
     }
 
     companion object {

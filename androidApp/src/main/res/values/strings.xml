@@ -195,4 +195,10 @@
     <string name="delete_invoice">Delete draft</string>
     <string name="delete_invoice_title">Delete this draft?</string>
     <string name="delete_invoice_body">Only drafts can be deleted. The invoice number may leave a gap in your numbering. This cannot be undone.</string>
+    <string name="edit_draft">Edit draft</string>
+    <string name="editor_edit_title">Edit %1$s</string>
+    <string name="selected_count">%1$d selected</string>
+    <string name="delete_selected_title">Delete %1$d drafts?</string>
+    <string name="delete_selected_body">Only drafts are deleted. Numbers may leave gaps in your numbering. This cannot be undone.</string>
+    <string name="select_hint">Long-press a draft to select it</string>
 </resources>

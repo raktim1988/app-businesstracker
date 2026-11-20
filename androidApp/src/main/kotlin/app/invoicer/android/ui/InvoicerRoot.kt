@@ -165,7 +165,15 @@ fun InvoicerRoot(container: AppContainer) {
                         onBack = { navController.popBackStack() },
                         onOpenClient = client?.let { c -> { navController.navigate("client/${c.id}") } },
                         onSetStatus = { invoicesVm.setStatus(invoice, it) },
-                        onDelete = { invoicesVm.deleteDraft(invoice.id); navController.popBackStack() },
+                        onDelete = { invoicesVm.deleteDrafts(listOf(invoice.id)); navController.popBackStack() },
+                        onEdit = {
+                            val homeEditor: EditorViewModel = ViewModelProvider(
+                                navController.getBackStackEntry(Tab.Home.route),
+                                EditorViewModel.factory(container),
+                            )[EditorViewModel::class.java]
+                            homeEditor.loadDraft(invoice)
+                            navController.navigate(EDITOR)
+                        },
                         onSavePdf = { savePdf.launch("${context.getString(R.string.pdf_invoice).lowercase()}-${invoice.number}.pdf") },
                         onSharePdf = {
                             scope.launch {

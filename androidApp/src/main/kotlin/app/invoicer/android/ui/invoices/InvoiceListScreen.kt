@@ -3,7 +3,20 @@ package app.invoicer.android.ui.invoices
 import app.invoicer.android.ui.labelRes
 import androidx.compose.ui.res.stringResource
 import app.invoicer.android.R
-import androidx.compose.foundation.clickable
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import app.invoicer.domain.model.InvoiceStatus
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +51,11 @@ import app.invoicer.domain.model.Invoice
 fun InvoiceListScreen(viewModel: InvoicesViewModel, onOpenInvoice: (Invoice) -> Unit, onNewInvoice: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val fabLabel = stringResource(R.string.new_invoice_fab)
+    val selected = rememberSaveable { mutableStateListOf<String>() }
+    var confirm by rememberSaveable { mutableStateOf(false) }
+    // Drop selections whose invoices disappeared (deleted here or by a sync).
+    LaunchedEffect(state.invoices) { selected.retainAll(state.invoices.filter { it.status == InvoiceStatus.DRAFT }.map { it.id }.toSet()) }
+    BackHandler(enabled = selected.isNotEmpty()) { selected.clear() }
     Box(Modifier.fillMaxSize()) {
         if (state.invoices.isEmpty()) {
             Column(Modifier.padding(16.dp)) {
@@ -49,9 +67,65 @@ fun InvoiceListScreen(viewModel: InvoicesViewModel, onOpenInvoice: (Invoice) -> 
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 88.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                item { Text(stringResource(R.string.invoices_title), style = MaterialTheme.typography.headlineMedium) }
-                items(state.invoices, key = { it.id }) { InvoiceRow(it, Modifier.clickable { onOpenInvoice(it) }) }
+                item {
+                    if (selected.isEmpty()) {
+                        Column {
+                            Text(stringResource(R.string.invoices_title), style = MaterialTheme.typography.headlineMedium)
+                            if (state.invoices.any { it.status == InvoiceStatus.DRAFT }) {
+                                Text(
+                                    stringResource(R.string.select_hint),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    } else {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                stringResource(R.string.selected_count, selected.size),
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.weight(1f),
+                            )
+                            TextButton(onClick = { selected.clear() }) { Text(stringResource(R.string.cancel)) }
+                            Button(
+                                onClick = { confirm = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                            ) { Text(stringResource(R.string.confirm_delete)) }
+                        }
+                    }
+                }
+                items(state.invoices, key = { it.id }) { invoice ->
+                    val isDraft = invoice.status == InvoiceStatus.DRAFT
+                    InvoiceRow(
+                        invoice,
+                        Modifier.combinedClickable(
+                            onClick = {
+                                when {
+                                    selected.isEmpty() -> onOpenInvoice(invoice)
+                                    isDraft -> if (invoice.id in selected) selected.remove(invoice.id) else selected.add(invoice.id)
+                                }
+                            },
+                            onLongClick = { if (isDraft && invoice.id !in selected) selected.add(invoice.id) },
+                        ),
+                        selected = invoice.id in selected,
+                    )
+                }
             }
+        }
+        if (confirm) {
+            AlertDialog(
+                onDismissRequest = { confirm = false },
+                title = { Text(stringResource(R.string.delete_selected_title, selected.size)) },
+                text = { Text(stringResource(R.string.delete_selected_body)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        confirm = false
+                        viewModel.deleteDrafts(selected.toList())
+                        selected.clear()
+                    }) { Text(stringResource(R.string.confirm_delete)) }
+                },
+                dismissButton = { TextButton(onClick = { confirm = false }) { Text(stringResource(R.string.cancel)) } },
+            )
         }
         ExtendedFloatingActionButton(
             onClick = onNewInvoice,
@@ -63,8 +137,11 @@ fun InvoiceListScreen(viewModel: InvoicesViewModel, onOpenInvoice: (Invoice) -> 
 }
 
 @Composable
-fun InvoiceRow(invoice: Invoice, modifier: Modifier = Modifier) {
-    Card(modifier.fillMaxWidth()) {
+fun InvoiceRow(invoice: Invoice, modifier: Modifier = Modifier, selected: Boolean = false) {
+    Card(
+        modifier.fillMaxWidth(),
+        colors = if (selected) CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer) else CardDefaults.cardColors(),
+    ) {
         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(1f)) {
                 Text(invoice.clientName, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)

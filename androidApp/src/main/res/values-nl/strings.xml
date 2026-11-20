@@ -195,4 +195,10 @@
     <string name="delete_invoice">Concept verwijderen</string>
     <string name="delete_invoice_title">Dit concept verwijderen?</string>
     <string name="delete_invoice_body">Alleen concepten kunnen worden verwijderd. Het factuurnummer kan een gat in je nummering achterlaten. Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="edit_draft">Concept bewerken</string>
+    <string name="editor_edit_title">%1$s bewerken</string>
+    <string name="selected_count">%1$d geselecteerd</string>
+    <string name="delete_selected_title">%1$d concepten verwijderen?</string>
+    <string name="delete_selected_body">Alleen concepten worden verwijderd. Nummers kunnen gaten in je nummering achterlaten. Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="select_hint">Houd een concept ingedrukt om te selecteren</string>
 </resources>

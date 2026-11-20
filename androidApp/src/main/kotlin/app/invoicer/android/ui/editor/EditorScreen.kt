@@ -35,7 +35,9 @@ fun EditorScreen(viewModel: EditorViewModel, onClose: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item {
-            Text(stringResource(R.string.editor_title), style = MaterialTheme.typography.headlineSmall)
+            Text(
+                state.editingNumber?.let { stringResource(R.string.editor_edit_title, it) } ?: stringResource(R.string.editor_title),
+                style = MaterialTheme.typography.headlineSmall)
         }
         item { ClientField(state, viewModel) }
         item { InvoiceDateField(state, viewModel) }
