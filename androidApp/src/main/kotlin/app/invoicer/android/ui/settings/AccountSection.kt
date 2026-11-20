@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +37,8 @@ fun AccountSection(viewModel: AccountViewModel = viewModel()) {
     val syncState by sync.state.collectAsStateWithLifecycle()
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    var username by rememberSaveable { mutableStateOf("") }
+    var editing by rememberSaveable { mutableStateOf(false) }
 
     Text(stringResource(R.string.account_title), style = MaterialTheme.typography.titleMedium)
     when {
@@ -46,7 +49,26 @@ fun AccountSection(viewModel: AccountViewModel = viewModel()) {
         )
         state.loading -> Unit
         state.email != null -> {
-            InfoCard(stringResource(R.string.account_signed_in), state.email.orEmpty())
+            InfoCard(stringResource(R.string.account_signed_in), state.username ?: state.email.orEmpty())
+            if (editing) {
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text(stringResource(R.string.account_username)) },
+                    singleLine = true,
+                    isError = state.errorRes != null,
+                    supportingText = state.errorRes?.let { { Text(stringResource(it)) } },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Button(onClick = { viewModel.setUsername(username); editing = false }) { Text(stringResource(R.string.save)) }
+                    OutlinedButton(onClick = { editing = false }) { Text(stringResource(R.string.cancel)) }
+                }
+            } else {
+                TextButton(onClick = { username = state.username.orEmpty(); editing = true }) {
+                    Text(stringResource(R.string.account_change_username))
+                }
+            }
             Text(
                 when {
                     syncState.syncing -> stringResource(R.string.sync_running)
@@ -80,6 +102,13 @@ fun AccountSection(viewModel: AccountViewModel = viewModel()) {
                 modifier = Modifier.fillMaxWidth(),
             )
             OutlinedTextField(
+                value = username,
+                onValueChange = { username = it },
+                label = { Text(stringResource(R.string.account_username_optional)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 label = { Text(stringResource(R.string.account_password)) },
@@ -94,7 +123,7 @@ fun AccountSection(viewModel: AccountViewModel = viewModel()) {
                 Button(onClick = { viewModel.signIn(email, password) }, enabled = !state.busy) {
                     Text(stringResource(R.string.account_sign_in))
                 }
-                OutlinedButton(onClick = { viewModel.signUp(email, password) }, enabled = !state.busy) {
+                OutlinedButton(onClick = { viewModel.signUp(email, password, username) }, enabled = !state.busy) {
                     Text(stringResource(R.string.account_create))
                 }
             }

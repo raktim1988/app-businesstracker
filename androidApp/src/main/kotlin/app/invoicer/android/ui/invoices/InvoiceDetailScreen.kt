@@ -3,6 +3,7 @@ package app.invoicer.android.ui.invoices
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,55 +56,57 @@ fun InvoiceDetailScreen(
     val next = InvoiceWorkflow.next(invoice.status)
     val undo = InvoiceWorkflow.undo(invoice.status)
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
-            Text(invoice.number, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
-            StatusChip(if (overdue) R.string.status_overdue else invoice.status.labelRes(), error = overdue)
-        }
-
-        Card(Modifier.fillMaxWidth().padding(top = 8.dp)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                val clientModifier = if (onOpenClient != null) Modifier.clickable(onClick = onOpenClient) else Modifier
-                InfoRow(stringResource(R.string.label_client), invoice.clientName, clientModifier, highlight = onOpenClient != null)
-                InfoRow(stringResource(R.string.label_issue_date), invoice.issueDate.display())
-                InfoRow(stringResource(R.string.label_due_date), invoice.dueDate.display(), highlight = overdue, highlightColor = MaterialTheme.colorScheme.error)
+    SelectionContainer {
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
+                Text(invoice.number, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
+                StatusChip(if (overdue) R.string.status_overdue else invoice.status.labelRes(), error = overdue)
             }
-        }
 
-        Text(stringResource(R.string.label_lines), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp, bottom = 4.dp))
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                invoice.lines.forEach { LineRow(it) }
-                HorizontalDivider()
-                TotalsBlock(InvoiceCalculator.totals(invoice.lines))
+            Card(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val clientModifier = if (onOpenClient != null) Modifier.clickable(onClick = onOpenClient) else Modifier
+                    InfoRow(stringResource(R.string.label_client), invoice.clientName, clientModifier, highlight = onOpenClient != null)
+                    InfoRow(stringResource(R.string.label_issue_date), invoice.issueDate.display())
+                    InfoRow(stringResource(R.string.label_due_date), invoice.dueDate.display(), highlight = overdue, highlightColor = MaterialTheme.colorScheme.error)
+                }
             }
-        }
 
-        val hint = when (invoice.status) {
-            InvoiceStatus.DRAFT -> R.string.draft_hint
-            else -> R.string.locked_hint
-        }
-        Text(stringResource(hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 12.dp))
+            Text(stringResource(R.string.label_lines), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp, bottom = 4.dp))
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    invoice.lines.forEach { LineRow(it) }
+                    HorizontalDivider()
+                    TotalsBlock(InvoiceCalculator.totals(invoice.lines))
+                }
+            }
 
-        Row(Modifier.padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = onSavePdf, modifier = Modifier.weight(1f)) {
-                Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                Text(stringResource(R.string.save_pdf))
+            val hint = when (invoice.status) {
+                InvoiceStatus.DRAFT -> R.string.draft_hint
+                else -> R.string.locked_hint
             }
-            OutlinedButton(onClick = onSharePdf, modifier = Modifier.weight(1f)) {
-                Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                Text(stringResource(R.string.share_pdf))
-            }
-        }
+            Text(stringResource(hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 12.dp))
 
-        Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (undo != null) {
-                OutlinedButton(onClick = { onSetStatus(undo) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.undo_paid)) }
+            Row(Modifier.padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedButton(onClick = onSavePdf, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                    Text(stringResource(R.string.save_pdf))
+                }
+                OutlinedButton(onClick = onSharePdf, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                    Text(stringResource(R.string.share_pdf))
+                }
             }
-            if (next != null) {
-                val label = if (next == InvoiceStatus.PAID) R.string.mark_paid else R.string.mark_sent
-                Button(onClick = { onSetStatus(next) }, modifier = Modifier.weight(1f)) { Text(stringResource(label)) }
+
+            Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (undo != null) {
+                    OutlinedButton(onClick = { onSetStatus(undo) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.undo_paid)) }
+                }
+                if (next != null) {
+                    val label = if (next == InvoiceStatus.PAID) R.string.mark_paid else R.string.mark_sent
+                    Button(onClick = { onSetStatus(next) }, modifier = Modifier.weight(1f)) { Text(stringResource(label)) }
+                }
             }
         }
     }

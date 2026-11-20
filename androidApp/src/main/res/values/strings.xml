@@ -187,4 +187,9 @@
     <string name="sync_failed">Sync failed. Will retry when you change something.</string>
     <string name="sync_last">Last synced at %1$s</string>
     <string name="sync_never">Not synced yet</string>
+    <string name="account_username">Username</string>
+    <string name="account_username_optional">Username (optional)</string>
+    <string name="account_change_username">Change username</string>
+    <string name="account_error_username">Use 2 to 30 characters.</string>
+    <string name="save">Save</string>
 </resources>

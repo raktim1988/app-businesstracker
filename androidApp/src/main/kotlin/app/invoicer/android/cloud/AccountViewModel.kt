@@ -6,6 +6,11 @@ import app.invoicer.android.R
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
+import io.github.jan.supabase.auth.user.UserInfo
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.put
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +21,7 @@ data class AccountState(
     val configured: Boolean = false,
     val loading: Boolean = true,
     val email: String? = null,
+    val username: String? = null,
     val busy: Boolean = false,
     val errorRes: Int? = null,
 )
@@ -31,8 +37,8 @@ class AccountViewModel : ViewModel() {
                 c.auth.sessionStatus.collect { status ->
                     _state.update {
                         when (status) {
-                            is SessionStatus.Authenticated -> it.copy(loading = false, email = status.session.user?.email)
-                            is SessionStatus.NotAuthenticated -> it.copy(loading = false, email = null)
+                            is SessionStatus.Authenticated -> it.copy(loading = false, email = status.session.user?.email, username = status.session.user?.displayName())
+                            is SessionStatus.NotAuthenticated -> it.copy(loading = false, email = null, username = null)
                             else -> it
                         }
                     }
@@ -41,12 +47,27 @@ class AccountViewModel : ViewModel() {
         }
     }
 
+    fun setUsername(name: String) {
+        val clean = name.trim()
+        if (clean.length !in 2..30) return fail(R.string.account_error_username)
+        viewModelScope.launch {
+            val ok = runCatching {
+                client!!.auth.updateUser { data = buildJsonObject { put(USERNAME_KEY, clean) } }
+            }.isSuccess
+            _state.update { if (ok) it.copy(username = clean, errorRes = null) else it.copy(errorRes = R.string.account_error_generic) }
+        }
+    }
+
     fun signIn(email: String, password: String) = run(email, password) {
         client!!.auth.signInWith(Email) { this.email = email.trim(); this.password = password }
     }
 
-    fun signUp(email: String, password: String) = run(email, password) {
-        client!!.auth.signUpWith(Email) { this.email = email.trim(); this.password = password }
+    fun signUp(email: String, password: String, username: String) = run(email, password) {
+        client!!.auth.signUpWith(Email) {
+            this.email = email.trim()
+            this.password = password
+            username.trim().takeIf { it.isNotEmpty() }?.let { name -> data = buildJsonObject { put(USERNAME_KEY, name) } }
+        }
     }
 
     fun signOut() {
@@ -77,7 +98,12 @@ class AccountViewModel : ViewModel() {
         }
     }
 
+    private fun UserInfo.displayName(): String =
+        (userMetadata?.get(USERNAME_KEY) as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+            ?: email.orEmpty().substringBefore('@')
+
     private companion object {
+        const val USERNAME_KEY = "username"
         const val MIN_PASSWORD = 6
     }
 }

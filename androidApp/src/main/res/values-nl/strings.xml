@@ -187,4 +187,9 @@
     <string name="sync_failed">Synchroniseren mislukt. We proberen het opnieuw bij je volgende wijziging.</string>
     <string name="sync_last">Laatst gesynchroniseerd om %1$s</string>
     <string name="sync_never">Nog niet gesynchroniseerd</string>
+    <string name="account_username">Gebruikersnaam</string>
+    <string name="account_username_optional">Gebruikersnaam (optioneel)</string>
+    <string name="account_change_username">Gebruikersnaam wijzigen</string>
+    <string name="account_error_username">Gebruik 2 tot 30 tekens.</string>
+    <string name="save">Opslaan</string>
 </resources>
