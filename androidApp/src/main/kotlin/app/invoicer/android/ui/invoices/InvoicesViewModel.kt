@@ -37,6 +37,10 @@ class InvoicesViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch { container.invoiceRepository.upsert(invoice.copy(status = status)) }
     }
 
+    fun deleteDraft(id: String) {
+        viewModelScope.launch { container.invoiceRepository.deleteDraft(id) }
+    }
+
     companion object {
         fun factory(container: AppContainer): ViewModelProvider.Factory =
             viewModelFactory { initializer { InvoicesViewModel(container) } }

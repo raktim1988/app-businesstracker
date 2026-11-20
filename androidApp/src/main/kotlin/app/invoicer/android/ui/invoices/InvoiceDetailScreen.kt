@@ -14,7 +14,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -50,7 +56,9 @@ fun InvoiceDetailScreen(
     onSetStatus: (InvoiceStatus) -> Unit,
     onSharePdf: () -> Unit,
     onSavePdf: () -> Unit,
+    onDelete: () -> Unit,
 ) {
+    var confirmDelete by rememberSaveable { mutableStateOf(false) }
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
     val overdue = invoice.isOverdue(today)
     val next = InvoiceWorkflow.next(invoice.status)
@@ -107,6 +115,20 @@ fun InvoiceDetailScreen(
                     val label = if (next == InvoiceStatus.PAID) R.string.mark_paid else R.string.mark_sent
                     Button(onClick = { onSetStatus(next) }, modifier = Modifier.weight(1f)) { Text(stringResource(label)) }
                 }
+            }
+            if (invoice.status == InvoiceStatus.DRAFT) {
+                TextButton(onClick = { confirmDelete = true }, modifier = Modifier.padding(top = 4.dp)) {
+                    Text(stringResource(R.string.delete_invoice), color = MaterialTheme.colorScheme.error)
+                }
+            }
+            if (confirmDelete) {
+                AlertDialog(
+                    onDismissRequest = { confirmDelete = false },
+                    title = { Text(stringResource(R.string.delete_invoice_title)) },
+                    text = { Text(stringResource(R.string.delete_invoice_body)) },
+                    confirmButton = { TextButton(onClick = { confirmDelete = false; onDelete() }) { Text(stringResource(R.string.confirm_delete)) } },
+                    dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel)) } },
+                )
             }
         }
     }

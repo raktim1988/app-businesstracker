@@ -108,6 +108,17 @@ class SqlInvoiceRepository(
         }
     }
 
+    override suspend fun deleteDraft(id: String) {
+        withContext(dispatcher) {
+            q.transaction {
+                if (q.selectInvoice(id).executeAsOneOrNull()?.status == InvoiceStatus.DRAFT.name) {
+                    q.deleteLines(id)
+                    q.deleteInvoice(id)
+                }
+            }
+        }
+    }
+
     override suspend fun nextNumber(year: Int): String = withContext(dispatcher) {
         val prefix = "$year-"
         val last = q.invoiceNumbersWithPrefix(prefix).executeAsList()

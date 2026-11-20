@@ -1,5 +1,6 @@
 package app.invoicer.android.cloud
 
+import android.content.SharedPreferences
 import app.invoicer.data.SyncStore
 import app.invoicer.data.db.Business_profile
 import app.invoicer.data.db.Client
@@ -31,12 +32,22 @@ data class SyncState(val syncing: Boolean = false, val lastSyncMillis: Long? = n
  * Last write wins per row, decided by `updated_at`. Deletions are not synced yet.
  */
 @OptIn(FlowPreview::class)
-class SyncManager(private val store: SyncStore, private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)) {
+class SyncManager(
+    private val store: SyncStore,
+    private val prefs: SharedPreferences,
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default),
+) {
     private val client = Cloud.client
     private val mutex = Mutex()
     private val _state = MutableStateFlow(SyncState())
     val state: StateFlow<SyncState> = _state.asStateFlow()
     private var pending: Job? = null
+    private var failures = 0
+
+    /** Isolates one row so a conflict (e.g. a duplicate invoice number) does not block the rest. */
+    private suspend fun attempt(block: suspend () -> Unit) {
+        runCatching { block() }.onFailure { if (it is kotlinx.coroutines.CancellationException) throw it else failures++ }
+    }
 
     /** Syncs once whenever a session becomes active, e.g. after sign-in or on app start. */
     fun start(localChanges: Flow<*>) {
@@ -59,7 +70,8 @@ class SyncManager(private val store: SyncStore, private val scope: CoroutineScop
         val c = client ?: return
         val userId = c.auth.currentUserOrNull()?.id ?: return
         _state.update { it.copy(syncing = true) }
-        val ok = runCatching { sync(userId) }.isSuccess
+        failures = 0
+        val ok = runCatching { sync(userId) }.isSuccess && failures == 0
         _state.update { SyncState(false, if (ok) Clock.System.now().toEpochMilliseconds() else it.lastSyncMillis, !ok) }
     }
 
@@ -70,33 +82,65 @@ class SyncManager(private val store: SyncStore, private val scope: CoroutineScop
         syncProfile(db, userId)
     }
 
+    /** Ids known to exist in the cloud after the last successful sync; a missing id means it was deleted on one side. */
+    private fun syncedIds(kind: String, userId: String): Set<String> =
+        prefs.getStringSet("$kind:$userId", emptySet()).orEmpty()
+
+    private fun saveSyncedIds(kind: String, userId: String, ids: Set<String>) {
+        prefs.edit().putStringSet("$kind:$userId", ids).apply()
+    }
+
     private suspend fun syncClients(db: io.github.jan.supabase.SupabaseClient, userId: String) {
-        val remote = db.from("client").select().decodeList<ClientDto>().associateBy { it.id }
-        val local = store.clients().associateBy { it.id }
+        var remote = db.from("client").select().decodeList<ClientDto>().associateBy { it.id }
+        var local = store.clients().associateBy { it.id }
+        val synced = syncedIds("client", userId)
+
+        val deletedRemotely = local.keys.filter { it in synced && it !in remote }
+        deletedRemotely.forEach { store.deleteClient(it) }
+        val deletedLocally = remote.keys.filter { it in synced && it !in local }
+        if (deletedLocally.isNotEmpty()) db.from("client").delete { filter { isIn("id", deletedLocally) } }
+        local = local - deletedRemotely.toSet()
+        remote = remote - deletedLocally.toSet()
+
         val push = local.values.filter { (remote[it.id]?.updatedAt ?: -1) < it.updated_at }
         if (push.isNotEmpty()) {
             db.from("client").upsert(push.map { it.toDto(userId) }) { onConflict = "user_id,id" }
         }
         remote.values.filter { (local[it.id]?.updated_at ?: -1) < it.updatedAt }.forEach { store.putClient(it.toRow()) }
+        saveSyncedIds("client", userId, remote.keys + push.map { it.id })
     }
 
     private suspend fun syncInvoices(db: io.github.jan.supabase.SupabaseClient, userId: String) {
-        val remote = db.from("invoice").select().decodeList<InvoiceDto>().associateBy { it.id }
+        var remote = db.from("invoice").select().decodeList<InvoiceDto>().associateBy { it.id }
         val remoteLines = db.from("invoice_line").select().decodeList<LineDto>().groupBy { it.invoiceId }
-        val local = store.invoices().associateBy { it.id }
+        var local = store.invoices().associateBy { it.id }
         val localLines = store.lines().groupBy { it.invoice_id }
+        val synced = syncedIds("invoice", userId)
+        val confirmed = mutableSetOf<String>()
+
+        val deletedRemotely = local.values.filter { it.id in synced && it.id !in remote && it.status == "DRAFT" }.map { it.id }
+        deletedRemotely.forEach { store.deleteInvoice(it) }
+        val deletedLocally = remote.keys.filter { it in synced && it !in local }
+        if (deletedLocally.isNotEmpty()) db.from("invoice").delete { filter { isIn("id", deletedLocally) } }
+        local = local - deletedRemotely.toSet()
+        remote = remote - deletedLocally.toSet()
+        confirmed += remote.keys
 
         for (inv in local.values) {
             if ((remote[inv.id]?.updatedAt ?: -1) >= inv.updated_at) continue
-            db.from("invoice").upsert(inv.toDto(userId)) { onConflict = "user_id,id" }
-            db.from("invoice_line").delete { filter { eq("invoice_id", inv.id) } }
-            val lines = localLines[inv.id].orEmpty().map { it.toDto(userId) }
-            if (lines.isNotEmpty()) db.from("invoice_line").insert(lines)
+            attempt {
+                db.from("invoice").upsert(inv.toDto(userId)) { onConflict = "user_id,id" }
+                db.from("invoice_line").delete { filter { eq("invoice_id", inv.id) } }
+                val lines = localLines[inv.id].orEmpty().map { it.toDto(userId) }
+                if (lines.isNotEmpty()) db.from("invoice_line").insert(lines)
+                confirmed += inv.id
+            }
         }
         for (inv in remote.values) {
             if ((local[inv.id]?.updated_at ?: -1) >= inv.updatedAt) continue
-            store.putInvoice(inv.toRow(), remoteLines[inv.id].orEmpty().map { it.toRow() })
+            attempt { store.putInvoice(inv.toRow(), remoteLines[inv.id].orEmpty().map { it.toRow() }) }
         }
+        saveSyncedIds("invoice", userId, confirmed.intersect(store.invoices().map { it.id }.toSet()))
     }
 
     private suspend fun syncProfile(db: io.github.jan.supabase.SupabaseClient, userId: String) {

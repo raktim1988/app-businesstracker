@@ -62,8 +62,9 @@ fun DashboardScreen(
     val viewLabel = stringResource(R.string.view)
     LaunchedEffect(created) {
         val info = created ?: return@LaunchedEffect
-        editorViewModel.consumeJustCreated()
+        // Consuming first would change the effect key and cancel the snackbar before it appears.
         val result = snackbarHost.showSnackbar(createdMessage.orEmpty(), actionLabel = viewLabel, duration = SnackbarDuration.Long)
+        editorViewModel.consumeJustCreated()
         if (result == SnackbarResult.ActionPerformed) onOpenInvoiceId(info.id)
     }
 

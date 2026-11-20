@@ -84,6 +84,12 @@ insertLine:
 INSERT INTO invoice_line(invoice_id, position, description, quantity_milli, unit_price_cents, vat_percent)
 VALUES (?, ?, ?, ?, ?, ?);
 
+deleteInvoice:
+DELETE FROM invoice WHERE id = ? AND status = 'DRAFT';
+
+deleteInvoiceAny:
+DELETE FROM invoice WHERE id = ?;
+
 invoiceNumbersWithPrefix:
 SELECT number FROM invoice WHERE number LIKE ? || '%';
 

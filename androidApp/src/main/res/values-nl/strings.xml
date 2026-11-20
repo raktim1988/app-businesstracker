@@ -192,4 +192,7 @@
     <string name="account_change_username">Gebruikersnaam wijzigen</string>
     <string name="account_error_username">Gebruik 2 tot 30 tekens.</string>
     <string name="save">Opslaan</string>
+    <string name="delete_invoice">Concept verwijderen</string>
+    <string name="delete_invoice_title">Dit concept verwijderen?</string>
+    <string name="delete_invoice_body">Alleen concepten kunnen worden verwijderd. Het factuurnummer kan een gat in je nummering achterlaten. Dit kan niet ongedaan worden gemaakt.</string>
 </resources>

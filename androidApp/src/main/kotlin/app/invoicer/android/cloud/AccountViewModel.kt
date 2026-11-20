@@ -39,6 +39,10 @@ class AccountViewModel : ViewModel() {
                         when (status) {
                             is SessionStatus.Authenticated -> it.copy(loading = false, email = status.session.user?.email, username = status.session.user?.displayName())
                             is SessionStatus.NotAuthenticated -> it.copy(loading = false, email = null, username = null)
+                            // Offline or a failed token refresh: keep showing the cached user instead of a blank section.
+                            is SessionStatus.RefreshFailure -> c.auth.currentUserOrNull().let { user ->
+                                it.copy(loading = false, email = user?.email, username = user?.displayName())
+                            }
                             else -> it
                         }
                     }

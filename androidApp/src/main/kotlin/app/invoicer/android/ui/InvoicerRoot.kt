@@ -165,6 +165,7 @@ fun InvoicerRoot(container: AppContainer) {
                         onBack = { navController.popBackStack() },
                         onOpenClient = client?.let { c -> { navController.navigate("client/${c.id}") } },
                         onSetStatus = { invoicesVm.setStatus(invoice, it) },
+                        onDelete = { invoicesVm.deleteDraft(invoice.id); navController.popBackStack() },
                         onSavePdf = { savePdf.launch("${context.getString(R.string.pdf_invoice).lowercase()}-${invoice.number}.pdf") },
                         onSharePdf = {
                             scope.launch {

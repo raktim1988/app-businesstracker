@@ -32,6 +32,17 @@ class SyncStore(private val db: InvoicerDatabase) {
         }
     }
 
+    fun deleteClient(id: String) {
+        q.deleteClient(id)
+    }
+
+    fun deleteInvoice(id: String) {
+        q.transaction {
+            q.deleteLines(id)
+            q.deleteInvoiceAny(id)
+        }
+    }
+
     fun putProfile(p: Business_profile) {
         q.upsertProfile(p.name, p.address, p.kvk_number, p.btw_number, p.iban, p.default_payment_term_days, p.updated_at, p.version)
     }

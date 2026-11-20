@@ -11,6 +11,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class SqlRepositoriesTest {
@@ -46,6 +47,17 @@ class SqlRepositoriesTest {
         val updated = invoice("i1", "2026-0001", InvoiceStatus.SENT).copy(lines = listOf(InvoiceLine("Only", 1_000, Money(100))))
         invoices.upsert(updated)
         assertEquals(updated, invoices.get("i1"))
+    }
+
+    @Test
+    fun onlyDraftsCanBeDeleted() = runBlocking {
+        invoices.upsert(invoice("d", "2026-0001"))
+        invoices.upsert(invoice("s", "2026-0002", InvoiceStatus.SENT))
+        invoices.deleteDraft("d")
+        invoices.deleteDraft("s")
+        assertNull(invoices.get("d"))
+        assertNotNull(invoices.get("s"))
+        Unit
     }
 
     @Test

@@ -18,7 +18,7 @@ class InvoicerApp : Application() {
         AppContainer(createDatabase(driver))
     }
 
-    val sync by lazy { SyncManager(container.syncStore!!) }
+    val sync by lazy { SyncManager(container.syncStore!!, getSharedPreferences("sync", MODE_PRIVATE)) }
 
     override fun onCreate() {
         super.onCreate()

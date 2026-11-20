@@ -192,4 +192,7 @@
     <string name="account_change_username">Change username</string>
     <string name="account_error_username">Use 2 to 30 characters.</string>
     <string name="save">Save</string>
+    <string name="delete_invoice">Delete draft</string>
+    <string name="delete_invoice_title">Delete this draft?</string>
+    <string name="delete_invoice_body">Only drafts can be deleted. The invoice number may leave a gap in your numbering. This cannot be undone.</string>
 </resources>
